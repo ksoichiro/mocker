@@ -145,24 +145,24 @@ func parseConfigs() (mock Mock) {
 }
 
 func gen(mock *Mock, genId string) {
-	ids := []string{
-		"ios",
-		"android",
-	}
-
-	var validId string
-	for i := range ids {
-		if genId == ids[i] {
-			validId = genId
-			break
-		}
-	}
-	if validId == "" {
+	switch genId {
+	case "ios":
+		genIos(mock)
+	case "android":
+		genAndroid(mock)
+	default:
 		fmt.Println("Invalid gen ID")
 		printUsage()
 		os.Exit(ExitCodeError)
 	}
+}
 
+func genAndroid(mock *Mock) {
+	// TODO
+	fmt.Printf("%+v\n", mock)
+}
+
+func genIos(mock *Mock) {
 	// TODO
 	fmt.Printf("%+v\n", mock)
 }
