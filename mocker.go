@@ -92,8 +92,14 @@ func main() {
 		os.Exit(ExitCodeError)
 	}
 
+	if len(os.Args) < 3 {
+		printUsage()
+		os.Exit(ExitCodeError)
+	}
+	genId := os.Args[2]
+
 	mock := parseConfigs()
-	gen(&mock)
+	gen(&mock, genId)
 }
 
 func printUsage() {
@@ -138,7 +144,25 @@ func parseConfigs() (mock Mock) {
 	return
 }
 
-func gen(mock *Mock) {
+func gen(mock *Mock, genId string) {
+	ids := []string{
+		"ios",
+		"android",
+	}
+
+	var validId string
+	for i := range ids {
+		if genId == ids[i] {
+			validId = genId
+			break
+		}
+	}
+	if validId == "" {
+		fmt.Println("Invalid gen ID")
+		printUsage()
+		os.Exit(ExitCodeError)
+	}
+
 	// TODO
 	fmt.Printf("%+v\n", mock)
 }
