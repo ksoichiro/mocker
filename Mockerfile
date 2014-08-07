@@ -1,4 +1,5 @@
 {
+    "package": "com.gihub.ksoichiro",
     "screens": [
         {
             "id": "top",

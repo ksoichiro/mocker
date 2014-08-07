@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 const (
@@ -14,6 +16,7 @@ const (
 )
 
 type Mock struct {
+	Package string
 	Screens []Screen
 	Launch  Launch
 	Colors  []Color
@@ -160,6 +163,36 @@ func gen(mock *Mock, genId string) {
 func genAndroid(mock *Mock) {
 	// TODO
 	fmt.Printf("%+v\n", mock)
+	outDir := "out"
+	os.MkdirAll(outDir, 0777)
+
+	filename := filepath.Join(outDir, "AndroidManifest.xml")
+	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	defer f.Close()
+	f.WriteString(``)
+	f.Close()
+
+	javaDir := filepath.Join(outDir, "app", "src", "main", "java")
+	os.MkdirAll(javaDir, 0777)
+	packageDir := filepath.Join(javaDir, strings.Replace(mock.Package, ".", string(os.PathSeparator), -1))
+	os.MkdirAll(packageDir, 0777)
+	filename = filepath.Join(packageDir, "MockActivity.java")
+	f, _ = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	defer f.Close()
+	f.WriteString(fmt.Sprintf(`package %s;
+
+import android.os.Bundle;
+
+public class %s extends Activity {
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	}
+
+}
+`, mock.Package, "MockActivity"))
+	f.Close()
 }
 
 func genIos(mock *Mock) {
