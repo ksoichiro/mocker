@@ -170,13 +170,20 @@ func genAndroid(mock *Mock) {
 	os.MkdirAll(javaDir, 0777)
 	packageDir := filepath.Join(javaDir, strings.Replace(mock.Package, ".", string(os.PathSeparator), -1))
 	os.MkdirAll(packageDir, 0777)
+	resDir := filepath.Join(outDir, "app", "src", "main", "res")
+	os.MkdirAll(resDir, 0777)
 
+	// Generate Manifest
 	genAndroidManifest(mock, outDir)
 
+	// Generate Activities
 	for i := range mock.Screens {
 		screen := mock.Screens[i]
 		genAndroidActivity(mock, packageDir, screen)
 	}
+
+	// Generate resources
+	genAndroidStrings(mock, resDir)
 }
 
 func genIos(mock *Mock) {
@@ -254,4 +261,7 @@ public class %sActivity extends Activity {
 }
 `, mock.Package, activityId, screen.Id))
 	f.Close()
+}
+
+func genAndroidStrings(mock *Mock, resDir string) {
 }
