@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -166,18 +167,29 @@ func genAndroid(mock *Mock) {
 	// TODO
 	fmt.Printf("%+v\n", mock)
 
-	// Create standard project directory structure
 	outDir := "out"
-	baseDir := filepath.Join(outDir, "app", "src", "main")
-	javaDir := filepath.Join(baseDir, "java")
+	srcDir := filepath.Join(outDir, "src")
+	mainDir := filepath.Join(srcDir, "main")
+	javaDir := filepath.Join(mainDir, "java")
 	packageDir := filepath.Join(javaDir, strings.Replace(mock.Package, ".", string(os.PathSeparator), -1))
-	os.MkdirAll(packageDir, 0777)
-	resDir := filepath.Join(baseDir, "res")
+	resDir := filepath.Join(mainDir, "res")
+	layoutDir := filepath.Join(resDir, "layout")
 	valuesDir := filepath.Join(resDir, "values")
-	os.MkdirAll(valuesDir, 0777)
+
+	// Generate base file set using android command
+	cmd := exec.Command("android", "create", "project", "-n", "mock", "-v", "0.12.+", "-g", "-k", mock.Package, "-a", "DummyActivity", "-t", "android-19", "-p", outDir)
+	err := cmd.Run()
+	if err != nil {
+		fmt.Printf("Error while generating project")
+	}
+
+	// Remove unecessery directories and files
+	os.RemoveAll(filepath.Join(srcDir, "androidTest"))
+	os.Remove(filepath.Join(packageDir, "DummyActivity.java"))
+	os.Remove(filepath.Join(layoutDir, "main.xml"))
 
 	// Generate Manifest
-	genAndroidManifest(mock, outDir)
+	genAndroidManifest(mock, mainDir)
 
 	// Generate Activities
 	for i := range mock.Screens {
