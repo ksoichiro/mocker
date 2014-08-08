@@ -166,11 +166,11 @@ func genAndroid(mock *Mock) {
 
 	// Create standard project directory structure
 	outDir := "out"
-	javaDir := filepath.Join(outDir, "app", "src", "main", "java")
-	os.MkdirAll(javaDir, 0777)
+	baseDir := filepath.Join(outDir, "app", "src", "main")
+	javaDir := filepath.Join(baseDir, "java")
 	packageDir := filepath.Join(javaDir, strings.Replace(mock.Package, ".", string(os.PathSeparator), -1))
 	os.MkdirAll(packageDir, 0777)
-	resDir := filepath.Join(outDir, "app", "src", "main", "res")
+	resDir := filepath.Join(baseDir, "res")
 	os.MkdirAll(resDir, 0777)
 
 	// Generate Manifest
