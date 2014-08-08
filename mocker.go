@@ -163,15 +163,15 @@ func gen(mock *Mock, genId string) {
 func genAndroid(mock *Mock) {
 	// TODO
 	fmt.Printf("%+v\n", mock)
+
+	// Create standard project directory structure
 	outDir := "out"
-	os.MkdirAll(outDir, 0777)
-
-	genAndroidManifest(mock, outDir)
-
 	javaDir := filepath.Join(outDir, "app", "src", "main", "java")
 	os.MkdirAll(javaDir, 0777)
 	packageDir := filepath.Join(javaDir, strings.Replace(mock.Package, ".", string(os.PathSeparator), -1))
 	os.MkdirAll(packageDir, 0777)
+
+	genAndroidManifest(mock, outDir)
 
 	for i := range mock.Screens {
 		screen := mock.Screens[i]
