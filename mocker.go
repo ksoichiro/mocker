@@ -17,6 +17,7 @@ const (
 
 type Mock struct {
 	Package string
+	Name    string
 	Screens []Screen
 	Launch  Launch
 	Colors  []Color
@@ -25,6 +26,7 @@ type Mock struct {
 
 type Screen struct {
 	Id        string
+	Name      string
 	Layout    Layout
 	Behaviors []Behavior
 }
@@ -171,7 +173,8 @@ func genAndroid(mock *Mock) {
 	packageDir := filepath.Join(javaDir, strings.Replace(mock.Package, ".", string(os.PathSeparator), -1))
 	os.MkdirAll(packageDir, 0777)
 	resDir := filepath.Join(baseDir, "res")
-	os.MkdirAll(resDir, 0777)
+	valuesDir := filepath.Join(resDir, "values")
+	os.MkdirAll(valuesDir, 0777)
 
 	// Generate Manifest
 	genAndroidManifest(mock, outDir)
@@ -183,7 +186,7 @@ func genAndroid(mock *Mock) {
 	}
 
 	// Generate resources
-	genAndroidStrings(mock, resDir)
+	genAndroidStrings(mock, valuesDir)
 }
 
 func genIos(mock *Mock) {
@@ -263,5 +266,22 @@ public class %sActivity extends Activity {
 	f.Close()
 }
 
-func genAndroidStrings(mock *Mock, resDir string) {
+func genAndroidStrings(mock *Mock, valuesDir string) {
+	filename := filepath.Join(valuesDir, "strings.xml")
+	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	defer f.Close()
+	f.WriteString(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">%s</app_name>
+`, mock.Name))
+
+	for i := range mock.Screens {
+		screen := mock.Screens[i]
+		f.WriteString(fmt.Sprintf(`    <string name="activity_title_%s">%s</string>
+`, screen.Id, screen.Name))
+	}
+
+	f.WriteString(`</resources>
+`)
+	f.Close()
 }

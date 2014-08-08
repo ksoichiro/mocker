@@ -1,8 +1,10 @@
 {
     "package": "com.gihub.ksoichiro.demo",
+    "name": "Mocker Demo",
     "screens": [
         {
             "id": "top",
+            "name": "Welcome",
             "layout": {
                 "views": [
                     {
@@ -31,6 +33,7 @@
         },
         {
             "id": "next",
+            "name": "Next",
             "layout": {
                 "views": [
                     {
