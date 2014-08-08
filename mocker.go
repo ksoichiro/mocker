@@ -166,36 +166,92 @@ func genAndroid(mock *Mock) {
 	outDir := "out"
 	os.MkdirAll(outDir, 0777)
 
-	filename := filepath.Join(outDir, "AndroidManifest.xml")
-	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
-	defer f.Close()
-	f.WriteString(``)
-	f.Close()
+	genAndroidManifest(mock, outDir)
 
 	javaDir := filepath.Join(outDir, "app", "src", "main", "java")
 	os.MkdirAll(javaDir, 0777)
 	packageDir := filepath.Join(javaDir, strings.Replace(mock.Package, ".", string(os.PathSeparator), -1))
 	os.MkdirAll(packageDir, 0777)
-	filename = filepath.Join(packageDir, "MockActivity.java")
-	f, _ = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
-	defer f.Close()
-	f.WriteString(fmt.Sprintf(`package %s;
 
-import android.os.Bundle;
-
-public class %s extends Activity {
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	for i := range mock.Screens {
+		screen := mock.Screens[i]
+		genAndroidActivity(mock, packageDir, screen)
 	}
-
-}
-`, mock.Package, "MockActivity"))
-	f.Close()
 }
 
 func genIos(mock *Mock) {
 	// TODO
 	fmt.Printf("%+v\n", mock)
+}
+
+func genAndroidManifest(mock *Mock, outDir string) {
+	filename := filepath.Join(outDir, "AndroidManifest.xml")
+	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	defer f.Close()
+	f.WriteString(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="%s" >
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+`, mock.Package))
+
+	launcherId := mock.Launch.Screen
+	for i := range mock.Screens {
+		screen := mock.Screens[i]
+		activityId := strings.Title(screen.Id)
+		if screen.Id == launcherId {
+			// Launcher
+			f.WriteString(fmt.Sprintf(`        <activity
+            android:label="@string/activity_title_%s"
+            android:name=".%sActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+`, screen.Id, activityId))
+		} else {
+			f.WriteString(fmt.Sprintf(`        <activity
+            android:label="@string/activity_title_%s"
+            android:name=".%sActivity" />
+`, screen.Id, activityId))
+		}
+	}
+
+	f.WriteString(`    </application>
+
+</manifest>
+`)
+	f.Close()
+}
+
+func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
+	activityId := strings.Title(screen.Id)
+	filename := filepath.Join(packageDir, activityId+"Activity.java")
+	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	defer f.Close()
+	f.WriteString(fmt.Sprintf(`package %s;
+
+import android.os.Bundle;
+
+public class %sActivity extends Activity {
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_%s);
+		init();
+	}
+
+	private void init() {
+	}
+
+}
+`, mock.Package, activityId, screen.Id))
+	f.Close()
 }
