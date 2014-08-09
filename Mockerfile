@@ -15,7 +15,7 @@
     "screens": [
         {
             "id": "top",
-            "name": "Welcome",
+            "name": "Mocker Demo",
             "layout": {
                 "views": [
                     {
