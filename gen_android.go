@@ -9,9 +9,6 @@ import (
 )
 
 func genAndroid(mock *Mock) {
-	// TODO
-	fmt.Printf("%+v\n", mock)
-
 	outDir := "out"
 	srcDir := filepath.Join(outDir, "src")
 	mainDir := filepath.Join(srcDir, "main")
