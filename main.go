@@ -135,7 +135,8 @@ Generator:
 	mocker gen ID
 
 	ID:
-		ios  Objective-C code for iOS app
+		android  Java and XML code for Android app
+		ios      Objective-C code for iOS app
 `)
 }
 
