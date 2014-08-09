@@ -105,7 +105,7 @@ func main() {
 		os.Exit(ExitCodeError)
 	}
 	switch os.Args[1] {
-	case "gen":
+	case "gen", "g":
 	case "version":
 		printVersion()
 		os.Exit(ExitCodeSuccess)
@@ -141,12 +141,12 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, `mocker is a mock up framework for mobile apps.
 Usage: %s command
 Command:
-  gen      generate source code (see 'Generator')
+  g[en]    generate source code (see 'Generator')
   help     show this help
   version  show version of mocker
 
 Generator:
-  mocker gen ID [options]
+  mocker g[en] ID [options]
 
   ID:
     android  Java and XML code for Android app
