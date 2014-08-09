@@ -187,6 +187,7 @@ func genAndroid(mock *Mock) {
 	os.RemoveAll(filepath.Join(srcDir, "androidTest"))
 	os.Remove(filepath.Join(packageDir, "DummyActivity.java"))
 	os.Remove(filepath.Join(layoutDir, "main.xml"))
+	os.Remove(filepath.Join(valuesDir, "strings.xml"))
 
 	// Generate Manifest
 	genAndroidManifest(mock, mainDir)
