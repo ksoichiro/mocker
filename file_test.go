@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestFileExists(t *testing.T) {
-	if !fileExists("mocker.go") {
+	if !fileExists("main.go") {
 		t.Errorf("Expected true but false")
 	}
 	if fileExists("foo-bar") {
