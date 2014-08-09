@@ -99,6 +99,7 @@ type Def struct {
 
 func main() {
 	// Parse command
+	flag.Usage = printUsage
 	if len(os.Args) == 1 {
 		printUsage()
 		os.Exit(ExitCodeError)
