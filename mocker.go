@@ -314,6 +314,11 @@ android {
             proguardFile getDefaultProguardFile('proguard-android.txt')
         }
     }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
 }
 `,
 		mock.Meta.Android.CompileSdkVersion,
@@ -334,6 +339,7 @@ func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
 	defer f.Close()
 	f.WriteString(fmt.Sprintf(`package %s;
 
+import android.app.Activity;
 import android.os.Bundle;
 
 public class %sActivity extends Activity {
