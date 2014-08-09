@@ -268,10 +268,7 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 <RelativeLayout %s
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="16dp" >
+    >
 `, xmlns))
 		closeTag = "</RelativeLayout>\n"
 	case "linear":
@@ -281,10 +278,8 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 <LinearLayout %s
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
-    android:gravity="center"
     android:orientation="vertical"
-    android:padding="16dp" >
+    >
 `, xmlns))
 		closeTag = "</LinearLayout>\n"
 	}
