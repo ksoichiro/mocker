@@ -17,8 +17,9 @@ Its contents is JSON format.
 Then execute this:
 
 ```sh
-$ mocker gen ios
+$ mocker gen android
 ```
 
-`ios` is an output language(platform) identifier.
-
+```sh
+$ mocker gen ios
+```
