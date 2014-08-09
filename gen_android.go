@@ -231,7 +231,7 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 	xmlns := ""
 	if top {
-		xmlns = `xmlns:android="http://schemas.android.com/apk/res/android"`
+		xmlns = ` xmlns:android="http://schemas.android.com/apk/res/android"`
 	}
 	lo := convertAndroidLayoutOptions(view)
 	hasSub := 0 < len(view.Sub)
@@ -239,48 +239,62 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 
 	switch view.Type {
 	case "button":
-		f.WriteString(fmt.Sprintf(`
-<Button %s
-    android:id="@+id/%s"
-    android:layout_width="%s"
+		f.WriteString(fmt.Sprintf("<Button%s\n", xmlns))
+		if view.Id != "" {
+			f.WriteString(fmt.Sprintf(`    android:id="@+id/%s"
+`, view.Id))
+		}
+		f.WriteString(fmt.Sprintf(`    android:layout_width="%s"
     android:layout_height="%s"
-    android:text="@string/%s" />
+    android:text="@string/%s"
+    />
 `,
-			view.Id,
 			lo.Width,
 			lo.Height,
 			view.Label))
 	case "label":
-		f.WriteString(fmt.Sprintf(`
-<TextView %s
-    android:id="@+id/%s"
-    android:layout_width="%s"
+		f.WriteString(fmt.Sprintf("<TextView%s\n", xmlns))
+		if view.Id != "" {
+			f.WriteString(fmt.Sprintf(`    android:id="@+id/%s"
+`, view.Id))
+		}
+		f.WriteString(fmt.Sprintf(`    android:layout_width="%s"
     android:layout_height="%s"
     android:gravity="center"
-    android:text="@string/%s" />
+    android:text="@string/%s"
+    />
 `,
-			view.Id,
 			lo.Width,
 			lo.Height,
 			view.Label))
 	case "relative":
 		f.WriteString(fmt.Sprintf(`
-<RelativeLayout %s
+<RelativeLayout%s
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    >
 `, xmlns))
+		if view.Id != "" {
+			f.WriteString(fmt.Sprintf(`
+    android:id="@+id/%s"
+`, view.Id))
+		}
+		f.WriteString("    >\n")
 		closeTag = "</RelativeLayout>\n"
 	case "linear":
 		fallthrough
 	default:
 		f.WriteString(fmt.Sprintf(`
-<LinearLayout %s
+<LinearLayout%s
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    >
 `, xmlns))
+		if view.Id != "" {
+			f.WriteString(fmt.Sprintf(`
+    android:id="@+id/%s"
+`, view.Id))
+		}
+		f.WriteString("    >\n")
 		closeTag = "</LinearLayout>\n"
 	}
 
