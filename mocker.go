@@ -200,7 +200,6 @@ func genAndroid(mock *Mock) {
 	os.RemoveAll(filepath.Join(srcDir, "androidTest"))
 	os.Remove(filepath.Join(packageDir, "DummyActivity.java"))
 	os.Remove(filepath.Join(layoutDir, "main.xml"))
-	os.Remove(filepath.Join(valuesDir, "strings.xml"))
 
 	// Generate Manifest
 	genAndroidManifest(mock, mainDir)
@@ -402,7 +401,18 @@ func genAndroidColors(mock *Mock, valuesDir string) {
 	f.Close()
 }
 
+// Overwrite and create new file
 func createFile(filename string) (f *os.File) {
+	if fileExists(filename) {
+		os.Remove(filename)
+	}
 	f, _ = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
 	return
+}
+
+func fileExists(filename string) bool {
+	if _, err := os.Stat(filename); err != nil && os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
