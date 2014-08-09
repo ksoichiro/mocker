@@ -383,9 +383,7 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
         android:id="@+id/%s"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/%s"
-        android:textColor="#FF8800"
-        android:textSize="30dp" />
+        android:text="@string/%s" />
 `, view.Id, view.Label))
 		default:
 		}
