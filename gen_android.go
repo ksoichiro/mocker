@@ -219,8 +219,54 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 	filename := filepath.Join(layoutDir, "activity_"+screen.Id+".xml")
 	f := createFile(filename)
 	defer f.Close()
-	xmlns := `xmlns:android="http://schemas.android.com/apk/res/android"`
-	f.WriteString(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+	f.WriteString(`<?xml version="1.0" encoding="utf-8"?>
+`)
+	if 0 < len(screen.Layout) {
+		// Only parse root view
+		genAndroidLayoutRecur(&screen.Layout[0], f, true)
+	}
+	f.Close()
+}
+
+func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
+	xmlns := ""
+	if top {
+		xmlns = `xmlns:android="http://schemas.android.com/apk/res/android"`
+	}
+	lo := convertAndroidLayoutOptions(view)
+	hasSub := 0 < len(view.Sub)
+	closeTag := ""
+
+	switch view.Type {
+	case "button":
+		f.WriteString(fmt.Sprintf(`
+<Button
+    android:id="@+id/%s"
+    android:layout_width="%s"
+    android:layout_height="%s"
+    android:text="@string/%s" />
+`,
+			view.Id,
+			lo.Width,
+			lo.Height,
+			view.Label))
+	case "label":
+		f.WriteString(fmt.Sprintf(`
+<TextView
+    android:id="@+id/%s"
+    android:layout_width="%s"
+    android:layout_height="%s"
+    android:gravity="center"
+    android:text="@string/%s" />
+`,
+			view.Id,
+			lo.Width,
+			lo.Height,
+			view.Label))
+	case "linear":
+		fallthrough
+	default:
+		f.WriteString(fmt.Sprintf(`
 <LinearLayout %s
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -229,43 +275,19 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
     android:orientation="vertical"
     android:padding="16dp" >
 `, xmlns))
+		closeTag = "</LinearLayout>\n"
+	}
 
-	for i := range screen.Layout.Views {
-		view := screen.Layout.Views[i]
-		lo := convertAndroidLayoutOptions(view)
-		switch view.Type {
-		case "button":
-			f.WriteString(fmt.Sprintf(`
-    <Button
-        android:id="@+id/%s"
-        android:layout_width="%s"
-        android:layout_height="%s"
-        android:text="@string/%s" />
-`,
-				view.Id,
-				lo.Width,
-				lo.Height,
-				view.Label))
-		case "label":
-			f.WriteString(fmt.Sprintf(`
-    <TextView
-        android:id="@+id/%s"
-        android:layout_width="%s"
-        android:layout_height="%s"
-        android:gravity="center"
-        android:text="@string/%s" />
-`,
-				view.Id,
-				lo.Width,
-				lo.Height,
-				view.Label))
-		default:
+	// Print sub views recursively
+	if hasSub {
+		for _, sv := range view.Sub {
+			genAndroidLayoutRecur(&sv, f, false)
 		}
 	}
-	f.WriteString(`</LinearLayout>
-`)
 
-	f.Close()
+	if closeTag != "" {
+		f.WriteString(closeTag)
+	}
 }
 
 func genAndroidStrings(mock *Mock, valuesDir string) {
@@ -353,7 +375,7 @@ func genAndroidStyles(mock *Mock, valuesDir string) {
 	f.Close()
 }
 
-func convertAndroidLayoutOptions(view View) (lo LayoutOptions) {
+func convertAndroidLayoutOptions(view *View) (lo LayoutOptions) {
 	lo.Width = "wrap_content"
 	if view.SizeW == "fill" {
 		lo.Width = "match_parent"

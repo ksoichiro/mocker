@@ -45,13 +45,10 @@ type Android struct {
 type Screen struct {
 	Id        string
 	Name      string
-	Layout    Layout
+	Layout    []View
 	Behaviors []Behavior
 }
 
-type Layout struct {
-	Views []View
-}
 type LayoutOptions struct {
 	Width  string
 	Height string
@@ -60,6 +57,7 @@ type LayoutOptions struct {
 type View struct {
 	Id     string
 	Type   string
+	Sub    []View
 	Label  string
 	SizeW  string `json:"size_w"`
 	SizeH  string `json:"size_h"`

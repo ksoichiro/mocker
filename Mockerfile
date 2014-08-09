@@ -16,28 +16,31 @@
         {
             "id": "top",
             "name": "Mocker Demo",
-            "layout": {
-                "views": [
-                    {
-                        "id": "label_demo",
-                        "type": "label",
-                        "label": "label_demo",
-                        "size_w": "fill",
-                        "size_h": "wrap",
-                        "align_h": "top",
-                        "align_v": "center"
-                    },
-                    {
-                        "id": "next",
-                        "type": "button",
-                        "label": "button_next",
-                        "size_w": "fill",
-                        "size_h": "wrap",
-                        "align_h": "top",
-                        "align_v": "center"
-                    }
-                ]
-            },
+            "layout": [
+                {
+                    "type": "relative",
+                    "sub": [
+                        {
+                            "id": "label_demo",
+                            "type": "label",
+                            "label": "label_demo",
+                            "size_w": "fill",
+                            "size_h": "wrap",
+                            "align_h": "top",
+                            "align_v": "center"
+                        },
+                        {
+                            "id": "next",
+                            "type": "button",
+                            "label": "button_next",
+                            "size_w": "fill",
+                            "size_h": "wrap",
+                            "align_h": "top",
+                            "align_v": "center"
+                        }
+                    ]
+                }
+            ],
             "behaviors": [
                 {
                     "trigger": {
@@ -54,19 +57,22 @@
         {
             "id": "second",
             "name": "Next",
-            "layout": {
-                "views": [
-                    {
-                        "id": "next",
-                        "type": "button",
-                        "label": "button_next",
-                        "size_w": "fill",
-                        "size_h": "fill",
-                        "align_h": "center",
-                        "align_v": "center"
-                    }
-                ]
-            },
+            "layout": [
+                {
+                    "type": "linear",
+                    "sub": [
+                        {
+                            "id": "next",
+                            "type": "button",
+                            "label": "button_next",
+                            "size_w": "fill",
+                            "size_h": "fill",
+                            "align_h": "center",
+                            "align_v": "center"
+                        }
+                    ]
+                }
+            ],
             "behaviors": [
                 {
                     "trigger": {
