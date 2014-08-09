@@ -240,7 +240,7 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 	switch view.Type {
 	case "button":
 		f.WriteString(fmt.Sprintf(`
-<Button
+<Button %s
     android:id="@+id/%s"
     android:layout_width="%s"
     android:layout_height="%s"
@@ -252,7 +252,7 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 			view.Label))
 	case "label":
 		f.WriteString(fmt.Sprintf(`
-<TextView
+<TextView %s
     android:id="@+id/%s"
     android:layout_width="%s"
     android:layout_height="%s"
