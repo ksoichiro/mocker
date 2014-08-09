@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-func genAndroid(mock *Mock) {
-	outDir := "out"
+func genAndroid(opt *Options, mock *Mock) {
+	outDir := opt.OutDir
 	srcDir := filepath.Join(outDir, "src")
 	mainDir := filepath.Join(srcDir, "main")
 	javaDir := filepath.Join(mainDir, "java")

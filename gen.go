@@ -5,14 +5,14 @@ import (
 	"os"
 )
 
-func gen(mock *Mock, genId string) {
+func gen(opt *Options, mock *Mock, genId string) {
 	switch genId {
 	case "ios":
-		genIos(mock)
+		genIos(opt, mock)
 	case "android":
-		genAndroid(mock)
+		genAndroid(opt, mock)
 	default:
-		fmt.Println("Invalid gen ID")
+		fmt.Printf("Invalid gen ID: %s\n", genId)
 		printUsage()
 		os.Exit(ExitCodeError)
 	}

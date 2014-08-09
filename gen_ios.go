@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-func genIos(mock *Mock) {
+func genIos(opt *Options, mock *Mock) {
 	// TODO
 	fmt.Printf("%+v\n", mock)
 }

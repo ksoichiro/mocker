@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,6 +13,10 @@ const (
 	ExitCodeSuccess = 0
 	ExitCodeError   = 1
 )
+
+type Options struct {
+	OutDir string
+}
 
 type Mock struct {
 	Name    string
@@ -110,21 +115,32 @@ func main() {
 		os.Exit(ExitCodeError)
 	}
 
+	// Gen needs platform ID
 	if len(os.Args) < 3 {
 		printUsage()
 		os.Exit(ExitCodeError)
 	}
 	genId := os.Args[2]
 
+	// Options for gen subcommand
+	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	var (
+		outDir = fs.String("out", "out", "Output directory for generated codes.")
+	)
+	fs.Parse(os.Args[3:])
+
 	mock := parseConfigs()
-	gen(&mock, genId)
+	opt := Options{
+		OutDir: *outDir,
+	}
+	gen(&opt, &mock, genId)
 }
 
 func printUsage() {
 	fmt.Println(`mocker is a mock up framework for mobile apps.
 
 Usage:
-	mocker command [options]
+	mocker command
 
 Command:
 	gen      generate source code (see 'Generator')
@@ -132,11 +148,14 @@ Command:
 	version  show version of mocker
 
 Generator:
-	mocker gen ID
+	mocker gen ID [options]
 
 	ID:
 		android  Java and XML code for Android app
 		ios      Objective-C code for iOS app
+
+	options:
+		-out Output directory for generated codes
 `)
 }
 
