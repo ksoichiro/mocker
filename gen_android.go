@@ -278,6 +278,17 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
     android:id="@+id/%s"
 `, view.Id))
 		}
+		if view.Gravity != "" {
+			gravity := ""
+			switch view.Gravity {
+			case "center":
+				gravity = "center"
+			case "center_v":
+				gravity = "center_vertical"
+			}
+			f.WriteString(fmt.Sprintf(`    android:gravity="%s"
+`, gravity))
+		}
 		f.WriteString("    >\n")
 		closeTag = "</RelativeLayout>\n"
 	case "linear":

@@ -19,6 +19,7 @@
             "layout": [
                 {
                     "type": "relative",
+                    "gravity": "center",
                     "sub": [
                         {
                             "id": "label_demo",

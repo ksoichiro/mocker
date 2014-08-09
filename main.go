@@ -55,14 +55,15 @@ type LayoutOptions struct {
 }
 
 type View struct {
-	Id     string
-	Type   string
-	Sub    []View
-	Label  string
-	SizeW  string `json:"size_w"`
-	SizeH  string `json:"size_h"`
-	AlignH string `json:"align_h"`
-	AlignV string `json:"align_v"`
+	Id      string
+	Type    string
+	Sub     []View
+	Label   string
+	Gravity string
+	SizeW   string `json:"size_w"`
+	SizeH   string `json:"size_h"`
+	AlignH  string `json:"align_h"`
+	AlignV  string `json:"align_v"`
 }
 
 type Behavior struct {
