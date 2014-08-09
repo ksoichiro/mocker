@@ -195,6 +195,7 @@ func genAndroid(mock *Mock) {
 	for i := range mock.Screens {
 		screen := mock.Screens[i]
 		genAndroidActivity(mock, packageDir, screen)
+		genAndroidActivityLayout(mock, layoutDir, screen)
 	}
 
 	// Generate resources
@@ -275,6 +276,43 @@ public class %sActivity extends Activity {
 
 }
 `, mock.Package, activityId, screen.Id))
+	f.Close()
+}
+
+func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
+	filename := filepath.Join(layoutDir, "activity_"+screen.Id+".xml")
+	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	defer f.Close()
+	xmlns := `xmlns:android="http://schemas.android.com/apk/res/android"`
+	f.WriteString(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout %s
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="16dp" >
+`, xmlns))
+
+	for i := range screen.Layout.Views {
+		view := screen.Layout.Views[i]
+		switch view.Type {
+		case "button":
+			f.WriteString(fmt.Sprintf(`
+    <Button
+        android:id="@+id/%s"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/%s"
+        android:textColor="#FF8800"
+        android:textSize="30dp" />
+`, view.Id, view.Label))
+		default:
+		}
+	}
+	f.WriteString(`</LinearLayout>
+`)
+
 	f.Close()
 }
 
