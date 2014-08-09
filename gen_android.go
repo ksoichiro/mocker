@@ -232,17 +232,9 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 
 	for i := range screen.Layout.Views {
 		view := screen.Layout.Views[i]
+		lo := convertAndroidLayoutOptions(view)
 		switch view.Type {
 		case "button":
-			layoutW := "wrap_content"
-			if view.SizeW == "fill" {
-				layoutW = "match_parent"
-			}
-			layoutH := "wrap_content"
-			if view.SizeH == "fill" {
-				layoutH = "match_parent"
-			}
-
 			f.WriteString(fmt.Sprintf(`
     <Button
         android:id="@+id/%s"
@@ -251,8 +243,8 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
         android:text="@string/%s" />
 `,
 				view.Id,
-				layoutW,
-				layoutH,
+				lo.Width,
+				lo.Height,
 				view.Label))
 		default:
 		}
@@ -346,4 +338,16 @@ func genAndroidStyles(mock *Mock, valuesDir string) {
 `)
 
 	f.Close()
+}
+
+func convertAndroidLayoutOptions(view View) (lo LayoutOptions) {
+	lo.Width = "wrap_content"
+	if view.SizeW == "fill" {
+		lo.Width = "match_parent"
+	}
+	lo.Height = "wrap_content"
+	if view.SizeH == "fill" {
+		lo.Height = "match_parent"
+	}
+	return
 }

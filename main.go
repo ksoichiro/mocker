@@ -52,6 +52,10 @@ type Screen struct {
 type Layout struct {
 	Views []View
 }
+type LayoutOptions struct {
+	Width  string
+	Height string
+}
 
 type View struct {
 	Id     string
