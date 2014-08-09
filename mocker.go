@@ -353,11 +353,16 @@ func genAndroidLocalizedStrings(mock *Mock, resDir string) {
 		filename := filepath.Join(valuesDir, "strings.xml")
 		f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
 		defer f.Close()
+		f.WriteString(`<?xml version="1.0" encoding="utf-8"?>
+<resources>
+`)
 		for j := range s.Defs {
 			def := s.Defs[j]
 			f.WriteString(fmt.Sprintf(`    <string name="%s">%s</string>
 `, def.Id, def.Value))
 		}
+		f.WriteString(`</resources>
+`)
 		f.Close()
 	}
 }
