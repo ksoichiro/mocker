@@ -186,16 +186,24 @@ func genAndroidGradle(mock *Mock, outDir string) {
 	filename := filepath.Join(outDir, "build.gradle")
 	f := createFile(filename)
 	defer f.Close()
-	f.WriteString(fmt.Sprintf(`buildscript {
+	var buf []string
+	genCodeAndroidGradle(mock, &buf)
+	for _, s := range buf {
+		f.WriteString(s + "\n")
+	}
+	f.Close()
+}
+
+func genCodeAndroidGradle(mock *Mock, buf *[]string) {
+	*buf = append(*buf, fmt.Sprintf(`buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:%s'
     }
-}
-`, mock.Meta.Android.GradlePluginVersion))
-	f.WriteString(fmt.Sprintf(`apply plugin: 'com.android.application'
+}`, mock.Meta.Android.GradlePluginVersion))
+	*buf = append(*buf, fmt.Sprintf(`apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion '%s'
@@ -220,8 +228,7 @@ android {
         checkReleaseBuilds false
         abortOnError false
     }
-}
-`,
+}`,
 		mock.Meta.Android.CompileSdkVersion,
 		mock.Meta.Android.BuildToolsVersion,
 		mock.Meta.Android.Package,
@@ -229,8 +236,6 @@ android {
 		mock.Meta.Android.TargetSdkVersion,
 		mock.Meta.Android.VersionCode,
 		mock.Meta.Android.VersionName))
-
-	f.Close()
 }
 
 func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
