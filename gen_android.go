@@ -468,15 +468,20 @@ func genAndroidStyles(mock *Mock, valuesDir string) {
 	filename := filepath.Join(valuesDir, "styles.xml")
 	f := createFile(filename)
 	defer f.Close()
+	var buf []string
+	genCodeAndroidStyles(mock, &buf)
+	for _, s := range buf {
+		f.WriteString(s + "\n")
+	}
+	f.Close()
+}
 
-	f.WriteString(`<?xml version="1.0" encoding="utf-8"?>
+func genCodeAndroidStyles(mock *Mock, buf *[]string) {
+	*buf = append(*buf, `<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
     </style>
-</resources>
-`)
-
-	f.Close()
+</resources>`)
 }
 
 func convertAndroidLayoutOptions(widget AndroidWidget, view *View) (lo LayoutOptions) {
