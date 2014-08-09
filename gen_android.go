@@ -252,6 +252,7 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
         android:id="@+id/%s"
         android:layout_width="%s"
         android:layout_height="%s"
+        android:gravity="center"
         android:text="@string/%s" />
 `,
 				view.Id,
