@@ -137,7 +137,16 @@ func genAndroidManifest(mock *Mock, outDir string) {
 	filename := filepath.Join(outDir, "AndroidManifest.xml")
 	f := createFile(filename)
 	defer f.Close()
-	f.WriteString(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+	var buf []string
+	genCodeAndroidManifest(mock, &buf)
+	for _, s := range buf {
+		f.WriteString(s + "\n")
+	}
+	f.Close()
+}
+
+func genCodeAndroidManifest(mock *Mock, buf *[]string) {
+	*buf = append(*buf, fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="%s" >
 
@@ -145,8 +154,7 @@ func genAndroidManifest(mock *Mock, outDir string) {
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
-`, mock.Meta.Android.Package))
+        android:theme="@style/AppTheme" >`, mock.Meta.Android.Package))
 
 	launcherId := mock.Launch.Screen
 	for i := range mock.Screens {
@@ -154,7 +162,7 @@ func genAndroidManifest(mock *Mock, outDir string) {
 		activityId := strings.Title(screen.Id)
 		if screen.Id == launcherId {
 			// Launcher
-			f.WriteString(fmt.Sprintf(`        <activity
+			*buf = append(*buf, fmt.Sprintf(`        <activity
             android:label="@string/activity_title_%s"
             android:name=".%sActivity" >
             <intent-filter>
@@ -162,21 +170,16 @@ func genAndroidManifest(mock *Mock, outDir string) {
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-`, screen.Id, activityId))
+        </activity>`, screen.Id, activityId))
 		} else {
-			f.WriteString(fmt.Sprintf(`        <activity
+			*buf = append(*buf, fmt.Sprintf(`        <activity
             android:label="@string/activity_title_%s"
-            android:name=".%sActivity" />
-`, screen.Id, activityId))
+            android:name=".%sActivity" />`, screen.Id, activityId))
 		}
 	}
 
-	f.WriteString(`    </application>
-
-</manifest>
-`)
-	f.Close()
+	*buf = append(*buf, `    </application>
+</manifest>`)
 }
 
 func genAndroidGradle(mock *Mock, outDir string) {
