@@ -212,7 +212,7 @@ func genIos(mock *Mock) {
 
 func genAndroidManifest(mock *Mock, outDir string) {
 	filename := filepath.Join(outDir, "AndroidManifest.xml")
-	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	f := createFile(filename)
 	defer f.Close()
 	f.WriteString(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -259,7 +259,7 @@ func genAndroidManifest(mock *Mock, outDir string) {
 func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
 	activityId := strings.Title(screen.Id)
 	filename := filepath.Join(packageDir, activityId+"Activity.java")
-	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	f := createFile(filename)
 	defer f.Close()
 	f.WriteString(fmt.Sprintf(`package %s;
 
@@ -284,7 +284,7 @@ public class %sActivity extends Activity {
 
 func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 	filename := filepath.Join(layoutDir, "activity_"+screen.Id+".xml")
-	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	f := createFile(filename)
 	defer f.Close()
 	xmlns := `xmlns:android="http://schemas.android.com/apk/res/android"`
 	f.WriteString(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
@@ -321,7 +321,7 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 
 func genAndroidStrings(mock *Mock, valuesDir string) {
 	filename := filepath.Join(valuesDir, "strings_app.xml")
-	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	f := createFile(filename)
 	defer f.Close()
 
 	// App name
@@ -353,7 +353,7 @@ func genAndroidLocalizedStrings(mock *Mock, resDir string) {
 		valuesDir := filepath.Join(resDir, "values"+suffix)
 		os.MkdirAll(valuesDir, 0777)
 		filename := filepath.Join(valuesDir, "strings.xml")
-		f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+		f := createFile(filename)
 		defer f.Close()
 		f.WriteString(`<?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -371,7 +371,7 @@ func genAndroidLocalizedStrings(mock *Mock, resDir string) {
 
 func genAndroidColors(mock *Mock, valuesDir string) {
 	filename := filepath.Join(valuesDir, "colors.xml")
-	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	f := createFile(filename)
 	defer f.Close()
 
 	f.WriteString(`<?xml version="1.0" encoding="utf-8"?>
@@ -387,4 +387,9 @@ func genAndroidColors(mock *Mock, valuesDir string) {
 	f.WriteString(`</resources>
 `)
 	f.Close()
+}
+
+func createFile(filename string) (f *os.File) {
+	f, _ = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	return
 }
