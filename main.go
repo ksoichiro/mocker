@@ -138,26 +138,23 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Println(`mocker is a mock up framework for mobile apps.
-
-Usage:
-	mocker command
-
+	fmt.Fprintf(os.Stderr, `mocker is a mock up framework for mobile apps.
+Usage: %s command
 Command:
-	gen      generate source code (see 'Generator')
-	help     show this help
-	version  show version of mocker
+  gen      generate source code (see 'Generator')
+  help     show this help
+  version  show version of mocker
 
 Generator:
-	mocker gen ID [options]
+  mocker gen ID [options]
 
-	ID:
-		android  Java and XML code for Android app
-		ios      Objective-C code for iOS app
+  ID:
+    android  Java and XML code for Android app
+    ios      Objective-C code for iOS app
 
-	options:
-		-out Output directory for generated codes
-`)
+  options:
+    -out="out": Output directory for generated codes
+`, os.Args[0])
 }
 
 func printVersion() {
