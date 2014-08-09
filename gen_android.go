@@ -235,11 +235,12 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 	}
 	lo := convertAndroidLayoutOptions(view)
 	hasSub := 0 < len(view.Sub)
-	closeTag := ""
+	tag := ""
 
 	switch view.Type {
 	case "button":
-		f.WriteString(fmt.Sprintf("<Button%s\n", xmlns))
+		tag = "Button"
+		f.WriteString(fmt.Sprintf("<%s%s\n", tag, xmlns))
 		if view.Id != "" {
 			f.WriteString(fmt.Sprintf(`    android:id="@+id/%s"
 `, view.Id))
@@ -247,13 +248,13 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 		f.WriteString(fmt.Sprintf(`    android:layout_width="%s"
     android:layout_height="%s"
     android:text="@string/%s"
-    />
 `,
 			lo.Width,
 			lo.Height,
 			view.Label))
 	case "label":
-		f.WriteString(fmt.Sprintf("<TextView%s\n", xmlns))
+		tag = "TextView"
+		f.WriteString(fmt.Sprintf("<%s%s\n", tag, xmlns))
 		if view.Id != "" {
 			f.WriteString(fmt.Sprintf(`    android:id="@+id/%s"
 `, view.Id))
@@ -262,17 +263,16 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
     android:layout_height="%s"
     android:gravity="center"
     android:text="@string/%s"
-    />
 `,
 			lo.Width,
 			lo.Height,
 			view.Label))
 	case "relative":
-		f.WriteString(fmt.Sprintf(`
-<RelativeLayout%s
-    android:layout_width="match_parent"
+		tag = "RelativeLayout"
+		f.WriteString(fmt.Sprintf("<%s%s\n", tag, xmlns))
+		f.WriteString(fmt.Sprintf(`    android:layout_width="match_parent"
     android:layout_height="match_parent"
-`, xmlns))
+`))
 		if view.Id != "" {
 			f.WriteString(fmt.Sprintf(`
     android:id="@+id/%s"
@@ -289,35 +289,31 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 			f.WriteString(fmt.Sprintf(`    android:gravity="%s"
 `, gravity))
 		}
-		f.WriteString("    >\n")
-		closeTag = "</RelativeLayout>\n"
 	case "linear":
 		fallthrough
 	default:
-		f.WriteString(fmt.Sprintf(`
-<LinearLayout%s
-    android:layout_width="match_parent"
+		tag = "LinearLayout"
+		f.WriteString(fmt.Sprintf("<%s%s\n", tag, xmlns))
+		f.WriteString(fmt.Sprintf(`    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-`, xmlns))
+`))
 		if view.Id != "" {
 			f.WriteString(fmt.Sprintf(`
     android:id="@+id/%s"
 `, view.Id))
 		}
-		f.WriteString("    >\n")
-		closeTag = "</LinearLayout>\n"
 	}
 
-	// Print sub views recursively
 	if hasSub {
+		// Print sub views recursively
+		f.WriteString("    >\n")
 		for _, sv := range view.Sub {
 			genAndroidLayoutRecur(&sv, f, false)
 		}
-	}
-
-	if closeTag != "" {
-		f.WriteString(closeTag)
+		f.WriteString(fmt.Sprintf("</%s>\n", tag))
+	} else {
+		f.WriteString("    />\n")
 	}
 }
 
