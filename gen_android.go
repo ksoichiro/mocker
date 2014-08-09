@@ -8,7 +8,75 @@ import (
 	"strings"
 )
 
+// Default layout params for Android's widgets
+type AndroidWidget struct {
+	Name        string
+	Textable    bool
+	Gravity     string
+	Orientation string
+	SizeW       string
+	SizeH       string
+}
+
+type AndroidWidgetsDef struct {
+	widgets map[string]AndroidWidget
+}
+
+func (d *AndroidWidgetsDef) Add(name string, w AndroidWidget) {
+	if d.widgets == nil {
+		d.widgets = make(map[string]AndroidWidget)
+	}
+	d.widgets[name] = w
+}
+
+func (d *AndroidWidgetsDef) Has(name string) (ret bool) {
+	ret = false
+	if _, ok := d.widgets[name]; ok {
+		ret = true
+	}
+	return
+}
+
+func (d *AndroidWidgetsDef) Get(name string) AndroidWidget {
+	return d.widgets[name]
+}
+
+var awd AndroidWidgetsDef
+
+func defineAndroidWidgets() {
+	awd = AndroidWidgetsDef{}
+	awd.Add("button", AndroidWidget{
+		Name:     "Button",
+		Textable: true,
+		Gravity:  "center",
+		SizeW:    "fill",
+		SizeH:    "wrap",
+	})
+	awd.Add("label", AndroidWidget{
+		Name:     "TextView",
+		Textable: true,
+		Gravity:  "center",
+		SizeW:    "fill",
+		SizeH:    "wrap",
+	})
+	awd.Add("linear", AndroidWidget{
+		Name:        "LinearLayout",
+		Textable:    false,
+		Orientation: "vertical",
+		SizeW:       "fill",
+		SizeH:       "fill",
+	})
+	awd.Add("relative", AndroidWidget{
+		Name:     "RelativeLayout",
+		Textable: false,
+		SizeW:    "fill",
+		SizeH:    "fill",
+	})
+}
+
 func genAndroid(opt *Options, mock *Mock) {
+	defineAndroidWidgets()
+
 	outDir := opt.OutDir
 	srcDir := filepath.Join(outDir, "src")
 	mainDir := filepath.Join(srcDir, "main")
@@ -229,81 +297,55 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 }
 
 func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
+	if !awd.Has(view.Type) {
+		return
+	}
+	widget := awd.Get(view.Type)
+
 	xmlns := ""
 	if top {
 		xmlns = ` xmlns:android="http://schemas.android.com/apk/res/android"`
 	}
-	lo := convertAndroidLayoutOptions(view)
-	hasSub := 0 < len(view.Sub)
-	tag := ""
 
-	switch view.Type {
-	case "button":
-		tag = "Button"
-		f.WriteString(fmt.Sprintf("<%s%s\n", tag, xmlns))
-		if view.Id != "" {
-			f.WriteString(fmt.Sprintf(`    android:id="@+id/%s"
+	lo := convertAndroidLayoutOptions(widget, view)
+	hasSub := 0 < len(view.Sub)
+
+	f.WriteString(fmt.Sprintf("<%s%s\n", widget.Name, xmlns))
+	if view.Id != "" {
+		f.WriteString(fmt.Sprintf(`    android:id="@+id/%s"
 `, view.Id))
-		}
-		f.WriteString(fmt.Sprintf(`    android:layout_width="%s"
-    android:layout_height="%s"
-    android:text="@string/%s"
-`,
-			lo.Width,
-			lo.Height,
-			view.Label))
-	case "label":
-		tag = "TextView"
-		f.WriteString(fmt.Sprintf("<%s%s\n", tag, xmlns))
-		if view.Id != "" {
-			f.WriteString(fmt.Sprintf(`    android:id="@+id/%s"
-`, view.Id))
-		}
-		f.WriteString(fmt.Sprintf(`    android:layout_width="%s"
-    android:layout_height="%s"
-    android:gravity="center"
-    android:text="@string/%s"
-`,
-			lo.Width,
-			lo.Height,
-			view.Label))
-	case "relative":
-		tag = "RelativeLayout"
-		f.WriteString(fmt.Sprintf("<%s%s\n", tag, xmlns))
-		f.WriteString(fmt.Sprintf(`    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-`))
-		if view.Id != "" {
-			f.WriteString(fmt.Sprintf(`
-    android:id="@+id/%s"
-`, view.Id))
-		}
-		if view.Gravity != "" {
-			gravity := ""
-			switch view.Gravity {
-			case "center":
-				gravity = "center"
-			case "center_v":
-				gravity = "center_vertical"
-			}
-			f.WriteString(fmt.Sprintf(`    android:gravity="%s"
-`, gravity))
-		}
-	case "linear":
-		fallthrough
-	default:
-		tag = "LinearLayout"
-		f.WriteString(fmt.Sprintf("<%s%s\n", tag, xmlns))
-		f.WriteString(fmt.Sprintf(`    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-`))
-		if view.Id != "" {
-			f.WriteString(fmt.Sprintf(`
-    android:id="@+id/%s"
-`, view.Id))
-		}
 	}
+	if view.Below != "" {
+		f.WriteString(fmt.Sprintf(`    android:layout_below="@id/%s"
+`, view.Below))
+	}
+	if widget.Textable && view.Label != "" {
+		f.WriteString(fmt.Sprintf(`    android:text="@string/%s"
+`, view.Label))
+	}
+	if widget.Orientation != "" {
+		f.WriteString(fmt.Sprintf(`    android:orientation="%s"
+`, widget.Orientation))
+	}
+	if view.Gravity != "" {
+		gravity := ""
+		switch view.Gravity {
+		case "center":
+			gravity = "center"
+		case "center_v":
+			gravity = "center_vertical"
+		}
+		f.WriteString(fmt.Sprintf(`    android:gravity="%s"
+`, gravity))
+	} else if widget.Gravity != "" {
+		f.WriteString(fmt.Sprintf(`    android:gravity="%s"
+`, widget.Gravity))
+	}
+	f.WriteString(fmt.Sprintf(`    android:layout_width="%s"
+    android:layout_height="%s"
+`,
+		lo.Width,
+		lo.Height))
 
 	if hasSub {
 		// Print sub views recursively
@@ -311,7 +353,7 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 		for _, sv := range view.Sub {
 			genAndroidLayoutRecur(&sv, f, false)
 		}
-		f.WriteString(fmt.Sprintf("</%s>\n", tag))
+		f.WriteString(fmt.Sprintf("</%s>\n", widget.Name))
 	} else {
 		f.WriteString("    />\n")
 	}
@@ -402,14 +444,24 @@ func genAndroidStyles(mock *Mock, valuesDir string) {
 	f.Close()
 }
 
-func convertAndroidLayoutOptions(view *View) (lo LayoutOptions) {
-	lo.Width = "wrap_content"
-	if view.SizeW == "fill" {
-		lo.Width = "match_parent"
+func convertAndroidLayoutOptions(widget AndroidWidget, view *View) (lo LayoutOptions) {
+	base := view.SizeW
+	if base == "" {
+		base = widget.SizeW
 	}
-	lo.Height = "wrap_content"
-	if view.SizeH == "fill" {
+	if base == "fill" {
+		lo.Width = "match_parent"
+	} else {
+		lo.Width = "wrap_content"
+	}
+	base = view.SizeH
+	if base == "" {
+		base = widget.SizeH
+	}
+	if base == "fill" {
 		lo.Height = "match_parent"
+	} else {
+		lo.Height = "wrap_content"
 	}
 	return
 }

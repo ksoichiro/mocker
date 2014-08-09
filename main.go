@@ -60,6 +60,7 @@ type View struct {
 	Sub     []View
 	Label   string
 	Gravity string
+	Below   string
 	SizeW   string `json:"size_w"`
 	SizeH   string `json:"size_h"`
 	AlignH  string `json:"align_h"`
