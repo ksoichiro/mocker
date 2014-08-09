@@ -243,7 +243,17 @@ func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
 	filename := filepath.Join(packageDir, activityId+"Activity.java")
 	f := createFile(filename)
 	defer f.Close()
-	f.WriteString(fmt.Sprintf(`package %s;
+	var buf []string
+	genCodeAndroidActivity(mock, screen, &buf)
+	for _, s := range buf {
+		f.WriteString(s + "\n")
+	}
+	f.Close()
+}
+
+func genCodeAndroidActivity(mock *Mock, screen Screen, buf *[]string) {
+	activityId := strings.Title(screen.Id)
+	*buf = append(*buf, fmt.Sprintf(`package %s;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -259,8 +269,8 @@ public class %sActivity extends Activity {
         init();
     }
 
-    private void init() {
-`, mock.Meta.Android.Package, activityId, screen.Id))
+    private void init() {`,
+		mock.Meta.Android.Package, activityId, screen.Id))
 
 	for i := range screen.Behaviors {
 		b := screen.Behaviors[i]
@@ -268,10 +278,9 @@ public class %sActivity extends Activity {
 			// Not support other than click currently
 			continue
 		}
-		f.WriteString(fmt.Sprintf(`        findViewById(R.id.%s).setOnClickListener(new View.OnClickListener() {
+		*buf = append(*buf, fmt.Sprintf(`        findViewById(R.id.%s).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-`, b.Trigger.Widget))
+            public void onClick(View v) {`, b.Trigger.Widget))
 
 		if b.Action.Type == "transit_forward" {
 			var id string
@@ -281,22 +290,18 @@ public class %sActivity extends Activity {
 					id = next.Id
 				}
 			}
-			f.WriteString(fmt.Sprintf(`                startActivity(new Intent(%sActivity.this, %sActivity.class));
-`,
+			*buf = append(*buf, fmt.Sprintf(`                startActivity(new Intent(%sActivity.this, %sActivity.class));`,
 				strings.Title(screen.Id),
 				strings.Title(id)))
 		}
 
-		f.WriteString(`            }
-        });
-`)
+		*buf = append(*buf, `            }
+        });`)
 	}
 
-	f.WriteString(`    }
+	*buf = append(*buf, `    }
 
-}
-`)
-	f.Close()
+}`)
 }
 
 func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
