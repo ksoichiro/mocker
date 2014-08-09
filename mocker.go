@@ -17,12 +17,25 @@ const (
 )
 
 type Mock struct {
-	Package string
 	Name    string
+	Meta    Meta
 	Screens []Screen
 	Launch  Launch
 	Colors  []Color
 	Strings []String
+}
+
+type Meta struct {
+	Android Android
+}
+
+type Android struct {
+	Package           string
+	MinSdkVersion     int    `json:"min_sdk_version"`
+	TargetSdkVersion  int    `json:"target_sdk_version"`
+	CompileSdkVersion int    `json:"compile_sdk_version"`
+	VersionCode       int    `json:"version_code"`
+	VersionName       string `json:"version_name"`
 }
 
 type Screen struct {
@@ -171,13 +184,13 @@ func genAndroid(mock *Mock) {
 	srcDir := filepath.Join(outDir, "src")
 	mainDir := filepath.Join(srcDir, "main")
 	javaDir := filepath.Join(mainDir, "java")
-	packageDir := filepath.Join(javaDir, strings.Replace(mock.Package, ".", string(os.PathSeparator), -1))
+	packageDir := filepath.Join(javaDir, strings.Replace(mock.Meta.Android.Package, ".", string(os.PathSeparator), -1))
 	resDir := filepath.Join(mainDir, "res")
 	layoutDir := filepath.Join(resDir, "layout")
 	valuesDir := filepath.Join(resDir, "values")
 
 	// Generate base file set using android command
-	cmd := exec.Command("android", "create", "project", "-n", "mock", "-v", "0.12.+", "-g", "-k", mock.Package, "-a", "DummyActivity", "-t", "android-19", "-p", outDir)
+	cmd := exec.Command("android", "create", "project", "-n", "mock", "-v", "0.12.+", "-g", "-k", mock.Meta.Android.Package, "-a", "DummyActivity", "-t", "android-19", "-p", outDir)
 	err := cmd.Run()
 	if err != nil {
 		fmt.Printf("Error while generating project")
@@ -223,7 +236,7 @@ func genAndroidManifest(mock *Mock, outDir string) {
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-`, mock.Package))
+`, mock.Meta.Android.Package))
 
 	launcherId := mock.Launch.Screen
 	for i := range mock.Screens {
@@ -278,7 +291,7 @@ public class %sActivity extends Activity {
 	}
 
 }
-`, mock.Package, activityId, screen.Id))
+`, mock.Meta.Android.Package, activityId, screen.Id))
 	f.Close()
 }
 

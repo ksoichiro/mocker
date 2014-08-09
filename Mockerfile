@@ -1,6 +1,15 @@
 {
-    "package": "com.gihub.ksoichiro.demo",
     "name": "Mocker Demo",
+    "meta": {
+        "android": {
+            "package": "com.gihub.ksoichiro.demo",
+            "min_sdk_version": 15,
+            "target_sdk_version": 19,
+            "compile_sdk_version": 19,
+            "version_code": 1,
+            "version_name": "1.0"
+        }
+    },
     "screens": [
         {
             "id": "top",
