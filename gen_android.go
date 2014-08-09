@@ -384,23 +384,28 @@ func genAndroidStrings(mock *Mock, valuesDir string) {
 	filename := filepath.Join(valuesDir, "strings_app.xml")
 	f := createFile(filename)
 	defer f.Close()
+	var buf []string
+	genCodeAndroidStrings(mock, &buf)
+	for _, s := range buf {
+		f.WriteString(s + "\n")
+	}
+	f.Close()
+}
 
+func genCodeAndroidStrings(mock *Mock, buf *[]string) {
 	// App name
-	f.WriteString(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+	*buf = append(*buf, fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">%s</string>
-`, mock.Name))
+    <string name="app_name">%s</string>`, mock.Name))
 
 	// Activity title
 	for i := range mock.Screens {
 		screen := mock.Screens[i]
-		f.WriteString(fmt.Sprintf(`    <string name="activity_title_%s">%s</string>
-`, screen.Id, screen.Name))
+		*buf = append(*buf, fmt.Sprintf(`    <string name="activity_title_%s">%s</string>`,
+			screen.Id, screen.Name))
 	}
 
-	f.WriteString(`</resources>
-`)
-	f.Close()
+	*buf = append(*buf, `</resources>`)
 }
 
 func genAndroidLocalizedStrings(mock *Mock, resDir string) {
