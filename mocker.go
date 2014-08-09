@@ -192,7 +192,14 @@ func genAndroid(mock *Mock) {
 	valuesDir := filepath.Join(resDir, "values")
 
 	// Generate base file set using android command
-	cmd := exec.Command("android", "create", "project", "-n", "mock", "-v", mock.Meta.Android.GradlePluginVersion, "-g", "-k", mock.Meta.Android.Package, "-a", "DummyActivity", "-t", "android-19", "-p", outDir)
+	cmd := exec.Command("android", "create", "project",
+		"-n", "mock",
+		"-v", mock.Meta.Android.GradlePluginVersion,
+		"-g",
+		"-k", mock.Meta.Android.Package,
+		"-a", "DummyActivity",
+		"-t", "android-19",
+		"-p", outDir)
 	err := cmd.Run()
 	if err != nil {
 		fmt.Printf("Error while generating project")
