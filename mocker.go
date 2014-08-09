@@ -340,7 +340,9 @@ func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
 	f.WriteString(fmt.Sprintf(`package %s;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 public class %sActivity extends Activity {
 
@@ -352,10 +354,42 @@ public class %sActivity extends Activity {
 	}
 
 	private void init() {
+`, mock.Meta.Android.Package, activityId, screen.Id))
+
+	for i := range screen.Behaviors {
+		b := screen.Behaviors[i]
+		if b.Trigger.Type != "click" {
+			// Not support other than click currently
+			continue
+		}
+		f.WriteString(fmt.Sprintf(`		findViewById(R.id.%s).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+`, b.Trigger.Widget))
+
+		if b.Action.Type == "transit_forward" {
+			var id string
+			for j := range mock.Screens {
+				next := mock.Screens[j]
+				if next.Id == b.Action.Transit {
+					id = next.Id
+				}
+			}
+			f.WriteString(fmt.Sprintf(`				startActivity(new Intent(%sActivity.this, %sActivity.class));
+`,
+				strings.Title(screen.Id),
+				strings.Title(id)))
+		}
+
+		f.WriteString(`			}
+		});
+`)
 	}
 
+	f.WriteString(`	}
+
 }
-`, mock.Meta.Android.Package, activityId, screen.Id))
+`)
 	f.Close()
 }
 
