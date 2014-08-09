@@ -421,18 +421,23 @@ func genAndroidLocalizedStrings(mock *Mock, resDir string) {
 		filename := filepath.Join(valuesDir, "strings.xml")
 		f := createFile(filename)
 		defer f.Close()
-		f.WriteString(`<?xml version="1.0" encoding="utf-8"?>
-<resources>
-`)
-		for j := range s.Defs {
-			def := s.Defs[j]
-			f.WriteString(fmt.Sprintf(`    <string name="%s">%s</string>
-`, def.Id, def.Value))
+		var buf []string
+		genCodeAndroidLocalizedStrings(s, &buf)
+		for _, s := range buf {
+			f.WriteString(s + "\n")
 		}
-		f.WriteString(`</resources>
-`)
 		f.Close()
 	}
+}
+
+func genCodeAndroidLocalizedStrings(s String, buf *[]string) {
+	*buf = append(*buf, `<?xml version="1.0" encoding="utf-8"?>
+<resources>`)
+	for j := range s.Defs {
+		def := s.Defs[j]
+		*buf = append(*buf, fmt.Sprintf(`    <string name="%s">%s</string>`, def.Id, def.Value))
+	}
+	*buf = append(*buf, `</resources>`)
 }
 
 func genAndroidColors(mock *Mock, valuesDir string) {
