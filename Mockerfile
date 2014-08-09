@@ -73,6 +73,12 @@
             "defs": [
                 {"id": "button_next", "value": "Next"}
             ]
+        },
+        {
+            "lang": "ja",
+            "defs": [
+                {"id": "button_next", "value": "次へ"}
+            ]
         }
     ]
 }
