@@ -227,6 +227,7 @@ func genAndroid(mock *Mock) {
 	genAndroidStrings(mock, valuesDir)
 	genAndroidLocalizedStrings(mock, resDir)
 	genAndroidColors(mock, valuesDir)
+	genAndroidStyles(mock, valuesDir)
 }
 
 func genIos(mock *Mock) {
@@ -456,6 +457,21 @@ func genAndroidColors(mock *Mock, valuesDir string) {
 
 	f.WriteString(`</resources>
 `)
+	f.Close()
+}
+
+func genAndroidStyles(mock *Mock, valuesDir string) {
+	filename := filepath.Join(valuesDir, "styles.xml")
+	f := createFile(filename)
+	defer f.Close()
+
+	f.WriteString(`<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+    </style>
+</resources>
+`)
+
 	f.Close()
 }
 
