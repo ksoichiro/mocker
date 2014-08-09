@@ -200,6 +200,7 @@ func genAndroid(mock *Mock) {
 
 	// Generate resources
 	genAndroidStrings(mock, valuesDir)
+	genAndroidLocalizedStrings(mock, resDir)
 }
 
 func genIos(mock *Mock) {
@@ -317,14 +318,17 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 }
 
 func genAndroidStrings(mock *Mock, valuesDir string) {
-	filename := filepath.Join(valuesDir, "strings.xml")
+	filename := filepath.Join(valuesDir, "strings_app.xml")
 	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
 	defer f.Close()
+
+	// App name
 	f.WriteString(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">%s</app_name>
 `, mock.Name))
 
+	// Activity title
 	for i := range mock.Screens {
 		screen := mock.Screens[i]
 		f.WriteString(fmt.Sprintf(`    <string name="activity_title_%s">%s</string>
@@ -334,4 +338,26 @@ func genAndroidStrings(mock *Mock, valuesDir string) {
 	f.WriteString(`</resources>
 `)
 	f.Close()
+}
+
+func genAndroidLocalizedStrings(mock *Mock, resDir string) {
+	for i := range mock.Strings {
+		s := mock.Strings[i]
+		lang := s.Lang
+		suffix := "-" + lang
+		if strings.ToLower(lang) == "base" {
+			suffix = ""
+		}
+		valuesDir := filepath.Join(resDir, "values"+suffix)
+		os.MkdirAll(valuesDir, 0777)
+		filename := filepath.Join(valuesDir, "strings.xml")
+		f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+		defer f.Close()
+		for j := range s.Defs {
+			def := s.Defs[j]
+			f.WriteString(fmt.Sprintf(`    <string name="%s">%s</string>
+`, def.Id, def.Value))
+		}
+		f.Close()
+	}
 }
