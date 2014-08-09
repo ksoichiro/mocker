@@ -43,34 +43,42 @@ func (d *AndroidWidgetsDef) Get(name string) AndroidWidget {
 
 var awd AndroidWidgetsDef
 
+const (
+	gravityCenter       = "center"
+	gravityCenterV      = "center_v"
+	sizeFill            = "fill"
+	sizeWrap            = "wrap"
+	orientationVertical = "vertical"
+)
+
 func defineAndroidWidgets() {
 	awd = AndroidWidgetsDef{}
 	awd.Add("button", AndroidWidget{
 		Name:     "Button",
 		Textable: true,
-		Gravity:  "center",
-		SizeW:    "fill",
-		SizeH:    "wrap",
+		Gravity:  gravityCenter,
+		SizeW:    sizeFill,
+		SizeH:    sizeWrap,
 	})
 	awd.Add("label", AndroidWidget{
 		Name:     "TextView",
 		Textable: true,
-		Gravity:  "center",
-		SizeW:    "fill",
-		SizeH:    "wrap",
+		Gravity:  gravityCenter,
+		SizeW:    sizeFill,
+		SizeH:    sizeWrap,
 	})
 	awd.Add("linear", AndroidWidget{
 		Name:        "LinearLayout",
 		Textable:    false,
-		Orientation: "vertical",
-		SizeW:       "fill",
-		SizeH:       "fill",
+		Orientation: orientationVertical,
+		SizeW:       sizeFill,
+		SizeH:       sizeFill,
 	})
 	awd.Add("relative", AndroidWidget{
 		Name:     "RelativeLayout",
 		Textable: false,
-		SizeW:    "fill",
-		SizeH:    "fill",
+		SizeW:    sizeFill,
+		SizeH:    sizeFill,
 	})
 }
 
@@ -330,9 +338,9 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 	if view.Gravity != "" {
 		gravity := ""
 		switch view.Gravity {
-		case "center":
+		case gravityCenter:
 			gravity = "center"
-		case "center_v":
+		case gravityCenterV:
 			gravity = "center_vertical"
 		}
 		f.WriteString(fmt.Sprintf(`    android:gravity="%s"
@@ -449,7 +457,7 @@ func convertAndroidLayoutOptions(widget AndroidWidget, view *View) (lo LayoutOpt
 	if base == "" {
 		base = widget.SizeW
 	}
-	if base == "fill" {
+	if base == sizeFill {
 		lo.Width = "match_parent"
 	} else {
 		lo.Width = "wrap_content"
@@ -458,7 +466,7 @@ func convertAndroidLayoutOptions(widget AndroidWidget, view *View) (lo LayoutOpt
 	if base == "" {
 		base = widget.SizeH
 	}
-	if base == "fill" {
+	if base == sizeFill {
 		lo.Height = "match_parent"
 	} else {
 		lo.Height = "wrap_content"
