@@ -444,20 +444,24 @@ func genAndroidColors(mock *Mock, valuesDir string) {
 	filename := filepath.Join(valuesDir, "colors.xml")
 	f := createFile(filename)
 	defer f.Close()
+	var buf []string
+	genCodeAndroidColors(mock, &buf)
+	for _, s := range buf {
+		f.WriteString(s + "\n")
+	}
+	f.Close()
+}
 
-	f.WriteString(`<?xml version="1.0" encoding="utf-8"?>
-<resources>
-`)
+func genCodeAndroidColors(mock *Mock, buf *[]string) {
+	*buf = append(*buf, `<?xml version="1.0" encoding="utf-8"?>
+<resources>`)
 
 	for i := range mock.Colors {
 		c := mock.Colors[i]
-		f.WriteString(fmt.Sprintf(`    <color name="%s">%s</color>
-`, c.Id, c.Value))
+		*buf = append(*buf, fmt.Sprintf(`    <color name="%s">%s</color>`, c.Id, c.Value))
 	}
 
-	f.WriteString(`</resources>
-`)
-	f.Close()
+	*buf = append(*buf, `</resources>`)
 }
 
 func genAndroidStyles(mock *Mock, valuesDir string) {
