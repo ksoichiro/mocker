@@ -308,16 +308,23 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 	filename := filepath.Join(layoutDir, "activity_"+screen.Id+".xml")
 	f := createFile(filename)
 	defer f.Close()
-	f.WriteString(`<?xml version="1.0" encoding="utf-8"?>
-`)
-	if 0 < len(screen.Layout) {
-		// Only parse root view
-		genAndroidLayoutRecur(&screen.Layout[0], f, true)
+	var buf []string
+	genCodeAndroidActivityLayout(mock, screen, &buf)
+	for _, s := range buf {
+		f.WriteString(s + "\n")
 	}
 	f.Close()
 }
 
-func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
+func genCodeAndroidActivityLayout(mock *Mock, screen Screen, buf *[]string) {
+	*buf = append(*buf, `<?xml version="1.0" encoding="utf-8"?>`)
+	if 0 < len(screen.Layout) {
+		// Only parse root view
+		genAndroidLayoutRecur(&screen.Layout[0], true, buf)
+	}
+}
+
+func genAndroidLayoutRecur(view *View, top bool, buf *[]string) {
 	if !awd.Has(view.Type) {
 		return
 	}
@@ -331,22 +338,18 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 	lo := convertAndroidLayoutOptions(widget, view)
 	hasSub := 0 < len(view.Sub)
 
-	f.WriteString(fmt.Sprintf("<%s%s\n", widget.Name, xmlns))
+	*buf = append(*buf, fmt.Sprintf(`<%s%s`, widget.Name, xmlns))
 	if view.Id != "" {
-		f.WriteString(fmt.Sprintf(`    android:id="@+id/%s"
-`, view.Id))
+		*buf = append(*buf, fmt.Sprintf(`    android:id="@+id/%s"`, view.Id))
 	}
 	if view.Below != "" {
-		f.WriteString(fmt.Sprintf(`    android:layout_below="@id/%s"
-`, view.Below))
+		*buf = append(*buf, fmt.Sprintf(`    android:layout_below="@id/%s"`, view.Below))
 	}
 	if widget.Textable && view.Label != "" {
-		f.WriteString(fmt.Sprintf(`    android:text="@string/%s"
-`, view.Label))
+		*buf = append(*buf, fmt.Sprintf(`    android:text="@string/%s"`, view.Label))
 	}
 	if widget.Orientation != "" {
-		f.WriteString(fmt.Sprintf(`    android:orientation="%s"
-`, widget.Orientation))
+		*buf = append(*buf, fmt.Sprintf(`    android:orientation="%s"`, widget.Orientation))
 	}
 	if view.Gravity != "" {
 		gravity := ""
@@ -356,27 +359,24 @@ func genAndroidLayoutRecur(view *View, f *os.File, top bool) {
 		case gravityCenterV:
 			gravity = "center_vertical"
 		}
-		f.WriteString(fmt.Sprintf(`    android:gravity="%s"
-`, gravity))
+		*buf = append(*buf, fmt.Sprintf(`    android:gravity="%s"`, gravity))
 	} else if widget.Gravity != "" {
-		f.WriteString(fmt.Sprintf(`    android:gravity="%s"
-`, widget.Gravity))
+		*buf = append(*buf, fmt.Sprintf(`    android:gravity="%s"`, widget.Gravity))
 	}
-	f.WriteString(fmt.Sprintf(`    android:layout_width="%s"
-    android:layout_height="%s"
-`,
+	*buf = append(*buf, fmt.Sprintf(`    android:layout_width="%s"
+    android:layout_height="%s"`,
 		lo.Width,
 		lo.Height))
 
 	if hasSub {
 		// Print sub views recursively
-		f.WriteString("    >\n")
+		*buf = append(*buf, `    >`)
 		for _, sv := range view.Sub {
-			genAndroidLayoutRecur(&sv, f, false)
+			genAndroidLayoutRecur(&sv, false, buf)
 		}
-		f.WriteString(fmt.Sprintf("</%s>\n", widget.Name))
+		*buf = append(*buf, fmt.Sprintf(`</%s>`, widget.Name))
 	} else {
-		f.WriteString("    />\n")
+		*buf = append(*buf, `    />`)
 	}
 }
 
