@@ -246,6 +246,18 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 				lo.Width,
 				lo.Height,
 				view.Label))
+		case "label":
+			f.WriteString(fmt.Sprintf(`
+    <TextView
+        android:id="@+id/%s"
+        android:layout_width="%s"
+        android:layout_height="%s"
+        android:text="@string/%s" />
+`,
+				view.Id,
+				lo.Width,
+				lo.Height,
+				view.Label))
 		default:
 		}
 	}
