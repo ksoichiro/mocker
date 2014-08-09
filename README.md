@@ -23,3 +23,9 @@ $ mocker gen android
 ```sh
 $ mocker gen ios
 ```
+
+## License
+
+Copyright (c) 2014 Soichiro Kashima  
+Licensed under MIT license.  
+See the bundled [LICENSE](https://github.com/ksoichiro/mocker/blob/master/LICENSE) file for details.
