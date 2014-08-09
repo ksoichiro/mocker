@@ -398,7 +398,7 @@ func genAndroidStrings(mock *Mock, valuesDir string) {
 	// App name
 	f.WriteString(fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">%s</app_name>
+    <string name="app_name">%s</string>
 `, mock.Name))
 
 	// Activity title
