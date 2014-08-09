@@ -3,9 +3,11 @@
     "meta": {
         "android": {
             "package": "com.gihub.ksoichiro.demo",
+            "gradle_plugin_version": "0.12.+",
+            "build_tools_version": "20.0.0",
             "min_sdk_version": 15,
             "target_sdk_version": 19,
-            "compile_sdk_version": 19,
+            "compile_sdk_version": "android-19",
             "version_code": 1,
             "version_name": "1.0"
         }

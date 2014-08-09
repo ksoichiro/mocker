@@ -30,12 +30,14 @@ type Meta struct {
 }
 
 type Android struct {
-	Package           string
-	MinSdkVersion     int    `json:"min_sdk_version"`
-	TargetSdkVersion  int    `json:"target_sdk_version"`
-	CompileSdkVersion int    `json:"compile_sdk_version"`
-	VersionCode       int    `json:"version_code"`
-	VersionName       string `json:"version_name"`
+	Package             string
+	GradlePluginVersion string `json:"gradle_plugin_version"`
+	BuildToolsVersion   string `json:"build_tools_version"`
+	MinSdkVersion       int    `json:"min_sdk_version"`
+	TargetSdkVersion    int    `json:"target_sdk_version"`
+	CompileSdkVersion   string `json:"compile_sdk_version"`
+	VersionCode         int    `json:"version_code"`
+	VersionName         string `json:"version_name"`
 }
 
 type Screen struct {
@@ -190,7 +192,7 @@ func genAndroid(mock *Mock) {
 	valuesDir := filepath.Join(resDir, "values")
 
 	// Generate base file set using android command
-	cmd := exec.Command("android", "create", "project", "-n", "mock", "-v", "0.12.+", "-g", "-k", mock.Meta.Android.Package, "-a", "DummyActivity", "-t", "android-19", "-p", outDir)
+	cmd := exec.Command("android", "create", "project", "-n", "mock", "-v", mock.Meta.Android.GradlePluginVersion, "-g", "-k", mock.Meta.Android.Package, "-a", "DummyActivity", "-t", "android-19", "-p", outDir)
 	err := cmd.Run()
 	if err != nil {
 		fmt.Printf("Error while generating project")
@@ -203,6 +205,9 @@ func genAndroid(mock *Mock) {
 
 	// Generate Manifest
 	genAndroidManifest(mock, mainDir)
+
+	// Generate build.gradle
+	genAndroidGradle(mock, outDir)
 
 	// Generate Activities
 	for i := range mock.Screens {
@@ -265,6 +270,52 @@ func genAndroidManifest(mock *Mock, outDir string) {
 
 </manifest>
 `)
+	f.Close()
+}
+
+func genAndroidGradle(mock *Mock, outDir string) {
+	filename := filepath.Join(outDir, "build.gradle")
+	f := createFile(filename)
+	defer f.Close()
+	f.WriteString(fmt.Sprintf(`buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:%s'
+    }
+}
+`, mock.Meta.Android.GradlePluginVersion))
+	f.WriteString(fmt.Sprintf(`apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion '%s'
+    buildToolsVersion '%s'
+
+    defaultConfig {
+        applicationId "%s"
+        minSdkVersion %d
+        targetSdkVersion %d
+        versionCode %d
+        versionName "%s"
+    }
+
+    buildTypes {
+        release {
+            runProguard false
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+}
+`,
+		mock.Meta.Android.CompileSdkVersion,
+		mock.Meta.Android.BuildToolsVersion,
+		mock.Meta.Android.Package,
+		mock.Meta.Android.MinSdkVersion,
+		mock.Meta.Android.TargetSdkVersion,
+		mock.Meta.Android.VersionCode,
+		mock.Meta.Android.VersionName))
+
 	f.Close()
 }
 
