@@ -346,14 +346,14 @@ import android.view.View;
 
 public class %sActivity extends Activity {
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_%s);
-		init();
-	}
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_%s);
+        init();
+    }
 
-	private void init() {
+    private void init() {
 `, mock.Meta.Android.Package, activityId, screen.Id))
 
 	for i := range screen.Behaviors {
@@ -362,9 +362,9 @@ public class %sActivity extends Activity {
 			// Not support other than click currently
 			continue
 		}
-		f.WriteString(fmt.Sprintf(`		findViewById(R.id.%s).setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
+		f.WriteString(fmt.Sprintf(`        findViewById(R.id.%s).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 `, b.Trigger.Widget))
 
 		if b.Action.Type == "transit_forward" {
@@ -375,18 +375,18 @@ public class %sActivity extends Activity {
 					id = next.Id
 				}
 			}
-			f.WriteString(fmt.Sprintf(`				startActivity(new Intent(%sActivity.this, %sActivity.class));
+			f.WriteString(fmt.Sprintf(`                startActivity(new Intent(%sActivity.this, %sActivity.class));
 `,
 				strings.Title(screen.Id),
 				strings.Title(id)))
 		}
 
-		f.WriteString(`			}
-		});
+		f.WriteString(`            }
+        });
 `)
 	}
 
-	f.WriteString(`	}
+	f.WriteString(`    }
 
 }
 `)
