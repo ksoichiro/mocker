@@ -202,6 +202,7 @@ func genAndroid(mock *Mock) {
 	// Generate resources
 	genAndroidStrings(mock, valuesDir)
 	genAndroidLocalizedStrings(mock, resDir)
+	genAndroidColors(mock, valuesDir)
 }
 
 func genIos(mock *Mock) {
@@ -366,4 +367,24 @@ func genAndroidLocalizedStrings(mock *Mock, resDir string) {
 `)
 		f.Close()
 	}
+}
+
+func genAndroidColors(mock *Mock, valuesDir string) {
+	filename := filepath.Join(valuesDir, "colors.xml")
+	f, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
+	defer f.Close()
+
+	f.WriteString(`<?xml version="1.0" encoding="utf-8"?>
+<resources>
+`)
+
+	for i := range mock.Colors {
+		c := mock.Colors[i]
+		f.WriteString(fmt.Sprintf(`    <color name="%s">%s</color>
+`, c.Id, c.Value))
+	}
+
+	f.WriteString(`</resources>
+`)
+	f.Close()
 }
