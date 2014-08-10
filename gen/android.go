@@ -48,17 +48,13 @@ func defineAndroidWidgets() {
 }
 
 func (g *AndroidGenerator) Generate() {
-	genAndroid(g.opt, g.mock)
-}
-
-func genAndroid(opt *Options, mock *Mock) {
 	defineAndroidWidgets()
 
-	outDir := opt.OutDir
+	outDir := g.opt.OutDir
 	srcDir := filepath.Join(outDir, "src")
 	mainDir := filepath.Join(srcDir, "main")
 	javaDir := filepath.Join(mainDir, "java")
-	packageDir := filepath.Join(javaDir, strings.Replace(mock.Meta.Android.Package, ".", string(os.PathSeparator), -1))
+	packageDir := filepath.Join(javaDir, strings.Replace(g.mock.Meta.Android.Package, ".", string(os.PathSeparator), -1))
 	resDir := filepath.Join(mainDir, "res")
 	layoutDir := filepath.Join(resDir, "layout")
 	valuesDir := filepath.Join(resDir, "values")
@@ -66,9 +62,9 @@ func genAndroid(opt *Options, mock *Mock) {
 	// Generate base file set using android command
 	cmd := exec.Command("android", "create", "project",
 		"-n", "mock",
-		"-v", mock.Meta.Android.GradlePluginVersion,
+		"-v", g.mock.Meta.Android.GradlePluginVersion,
 		"-g",
-		"-k", mock.Meta.Android.Package,
+		"-k", g.mock.Meta.Android.Package,
 		"-a", "DummyActivity",
 		"-t", "android-19",
 		"-p", outDir)
@@ -89,23 +85,23 @@ func genAndroid(opt *Options, mock *Mock) {
 	go func(mock *Mock, dir string) {
 		defer wg.Done()
 		genAndroidManifest(mock, dir)
-	}(mock, mainDir)
+	}(g.mock, mainDir)
 
 	// Generate build.gradle
 	wg.Add(1)
 	go func(mock *Mock, dir string) {
 		defer wg.Done()
 		genAndroidGradle(mock, dir)
-	}(mock, outDir)
+	}(g.mock, outDir)
 
 	// Generate Activities
-	for _, screen := range mock.Screens {
+	for _, screen := range g.mock.Screens {
 		wg.Add(1)
 		go func(mock *Mock, dir1, dir2 string, screen Screen) {
 			defer wg.Done()
 			genAndroidActivity(mock, dir1, screen)
 			genAndroidActivityLayout(mock, dir2, screen)
-		}(mock, packageDir, layoutDir, screen)
+		}(g.mock, packageDir, layoutDir, screen)
 	}
 
 	// Generate resources
@@ -114,17 +110,17 @@ func genAndroid(opt *Options, mock *Mock) {
 		defer wg.Done()
 		genAndroidStrings(mock, dir1)
 		genAndroidLocalizedStrings(mock, dir2)
-	}(mock, valuesDir, resDir)
+	}(g.mock, valuesDir, resDir)
 	wg.Add(1)
 	go func(mock *Mock, dir string) {
 		defer wg.Done()
 		genAndroidColors(mock, dir)
-	}(mock, valuesDir)
+	}(g.mock, valuesDir)
 	wg.Add(1)
 	go func(mock *Mock, dir string) {
 		defer wg.Done()
 		genAndroidStyles(mock, dir)
-	}(mock, valuesDir)
+	}(g.mock, valuesDir)
 
 	wg.Wait()
 }
