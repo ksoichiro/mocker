@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 type AndroidGenerator struct {
@@ -122,24 +123,51 @@ func genAndroid(opt *Options, mock *Mock) {
 	os.Remove(filepath.Join(packageDir, "DummyActivity.java"))
 	os.Remove(filepath.Join(layoutDir, "main.xml"))
 
+	var wg sync.WaitGroup
+
 	// Generate Manifest
-	genAndroidManifest(mock, mainDir)
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genAndroidManifest(mock, dir)
+	}(mock, mainDir)
 
 	// Generate build.gradle
-	genAndroidGradle(mock, outDir)
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genAndroidGradle(mock, dir)
+	}(mock, outDir)
 
 	// Generate Activities
-	for i := range mock.Screens {
-		screen := mock.Screens[i]
-		genAndroidActivity(mock, packageDir, screen)
-		genAndroidActivityLayout(mock, layoutDir, screen)
+	for _, screen := range mock.Screens {
+		wg.Add(1)
+		go func(mock *Mock, dir1, dir2 string, screen Screen) {
+			defer wg.Done()
+			genAndroidActivity(mock, dir1, screen)
+			genAndroidActivityLayout(mock, dir2, screen)
+		}(mock, packageDir, layoutDir, screen)
 	}
 
 	// Generate resources
-	genAndroidStrings(mock, valuesDir)
-	genAndroidLocalizedStrings(mock, resDir)
-	genAndroidColors(mock, valuesDir)
-	genAndroidStyles(mock, valuesDir)
+	wg.Add(1)
+	go func(mock *Mock, dir1, dir2 string) {
+		defer wg.Done()
+		genAndroidStrings(mock, dir1)
+		genAndroidLocalizedStrings(mock, dir2)
+	}(mock, valuesDir, resDir)
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genAndroidColors(mock, dir)
+	}(mock, valuesDir)
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genAndroidStyles(mock, dir)
+	}(mock, valuesDir)
+
+	wg.Wait()
 }
 
 func genAndroidManifest(mock *Mock, outDir string) {
