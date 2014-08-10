@@ -3,10 +3,17 @@ package gen
 import "testing"
 
 func TestFileExists(t *testing.T) {
-	if !fileExists("main.go") {
-		t.Errorf("Expected true but false")
+	var testcases = []struct {
+		filename string
+		expect   bool
+	}{
+		{"../main.go", true},
+		{"../gen", true},
+		{"../foo-bar", false},
 	}
-	if fileExists("foo-bar") {
-		t.Errorf("Expected false but true")
+	for _, tc := range testcases {
+		if actual := fileExists(tc.filename); actual != tc.expect {
+			t.Errorf("Expected %t but %t: %s", tc.expect, actual, tc.filename)
+		}
 	}
 }
