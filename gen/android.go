@@ -143,8 +143,7 @@ func genCodeAndroidManifest(mock *Mock, buf *CodeBuffer) {
         android:theme="@style/AppTheme" >`, mock.Meta.Android.Package)
 
 	launcherId := mock.Launch.Screen
-	for i := range mock.Screens {
-		screen := mock.Screens[i]
+	for _, screen := range mock.Screens {
 		activityId := strings.Title(screen.Id)
 		if screen.Id == launcherId {
 			// Launcher
@@ -245,8 +244,7 @@ public class %sActivity extends Activity {
     private void init() {`,
 		mock.Meta.Android.Package, activityId, screen.Id)
 
-	for i := range screen.Behaviors {
-		b := screen.Behaviors[i]
+	for _, b := range screen.Behaviors {
 		if b.Trigger.Type != "click" {
 			// Not support other than click currently
 			continue
@@ -257,8 +255,7 @@ public class %sActivity extends Activity {
 
 		if b.Action.Type == "transit_forward" {
 			var id string
-			for j := range mock.Screens {
-				next := mock.Screens[j]
+			for _, next := range mock.Screens {
 				if next.Id == b.Action.Transit {
 					id = next.Id
 				}
@@ -367,8 +364,7 @@ func genCodeAndroidStrings(mock *Mock, buf *CodeBuffer) {
     <string name="app_name">%s</string>`, mock.Name)
 
 	// Activity title
-	for i := range mock.Screens {
-		screen := mock.Screens[i]
+	for _, screen := range mock.Screens {
 		buf.add(`    <string name="activity_title_%s">%s</string>`,
 			screen.Id, screen.Name)
 	}
@@ -377,8 +373,7 @@ func genCodeAndroidStrings(mock *Mock, buf *CodeBuffer) {
 }
 
 func genAndroidLocalizedStrings(mock *Mock, resDir string) {
-	for i := range mock.Strings {
-		s := mock.Strings[i]
+	for _, s := range mock.Strings {
 		lang := s.Lang
 		suffix := "-" + lang
 		if strings.ToLower(lang) == "base" {
@@ -395,8 +390,7 @@ func genAndroidLocalizedStrings(mock *Mock, resDir string) {
 func genCodeAndroidLocalizedStrings(s String, buf *CodeBuffer) {
 	buf.add(`<?xml version="1.0" encoding="utf-8"?>
 <resources>`)
-	for j := range s.Defs {
-		def := s.Defs[j]
+	for _, def := range s.Defs {
 		buf.add(`    <string name="%s">%s</string>`, def.Id, def.Value)
 	}
 	buf.add(`</resources>`)
@@ -412,8 +406,7 @@ func genCodeAndroidColors(mock *Mock, buf *CodeBuffer) {
 	buf.add(`<?xml version="1.0" encoding="utf-8"?>
 <resources>`)
 
-	for i := range mock.Colors {
-		c := mock.Colors[i]
+	for _, c := range mock.Colors {
 		buf.add(`    <color name="%s">%s</color>`, c.Id, c.Value)
 	}
 
