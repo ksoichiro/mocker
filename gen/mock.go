@@ -51,6 +51,7 @@ type View struct {
 	SizeH   string `json:"size_h"`
 	AlignH  string `json:"align_h"`
 	AlignV  string `json:"align_v"`
+	Margin  string
 }
 
 type Behavior struct {

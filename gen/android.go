@@ -400,6 +400,13 @@ func genAndroidLayoutRecur(view *View, top bool, buf *[]string) {
 	} else if widget.Gravity != "" {
 		*buf = append(*buf, fmt.Sprintf(`    android:gravity="%s"`, widget.Gravity))
 	}
+	if view.Margin != "" {
+		if view.Margin == "normal" {
+			*buf = append(*buf, fmt.Sprintf(`    android:layout_margin="%s"`, "16dp"))
+		} else {
+			*buf = append(*buf, fmt.Sprintf(`    android:layout_margin="%s"`, view.Margin))
+		}
+	}
 	*buf = append(*buf, fmt.Sprintf(`    android:layout_width="%s"
     android:layout_height="%s"`,
 		lo.Width,

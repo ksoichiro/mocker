@@ -28,7 +28,8 @@
                             "size_w": "fill",
                             "size_h": "wrap",
                             "align_h": "top",
-                            "align_v": "center"
+                            "align_v": "center",
+                            "margin": "normal"
                         },
                         {
                             "id": "next",
@@ -38,7 +39,8 @@
                             "size_w": "fill",
                             "size_h": "wrap",
                             "align_h": "top",
-                            "align_v": "center"
+                            "align_v": "center",
+                            "margin": "normal"
                         }
                     ]
                 }
@@ -71,7 +73,8 @@
                             "size_w": "fill",
                             "size_h": "fill",
                             "align_h": "center",
-                            "align_v": "center"
+                            "align_v": "center",
+                            "margin": "normal"
                         }
                     ]
                 }
