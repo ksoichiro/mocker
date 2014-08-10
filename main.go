@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/ksoichiro/mocker/gen"
 )
 
 const (
@@ -13,93 +15,6 @@ const (
 	ExitCodeSuccess = 0
 	ExitCodeError   = 1
 )
-
-type Options struct {
-	OutDir string
-}
-
-type Mock struct {
-	Name    string
-	Meta    Meta
-	Screens []Screen
-	Launch  Launch
-	Colors  []Color
-	Strings []String
-}
-
-type Meta struct {
-	Android Android
-}
-
-type Android struct {
-	Package             string
-	GradlePluginVersion string `json:"gradle_plugin_version"`
-	BuildToolsVersion   string `json:"build_tools_version"`
-	MinSdkVersion       int    `json:"min_sdk_version"`
-	TargetSdkVersion    int    `json:"target_sdk_version"`
-	CompileSdkVersion   string `json:"compile_sdk_version"`
-	VersionCode         int    `json:"version_code"`
-	VersionName         string `json:"version_name"`
-}
-
-type Screen struct {
-	Id        string
-	Name      string
-	Layout    []View
-	Behaviors []Behavior
-}
-
-type LayoutOptions struct {
-	Width  string
-	Height string
-}
-
-type View struct {
-	Id      string
-	Type    string
-	Sub     []View
-	Label   string
-	Gravity string
-	Below   string
-	SizeW   string `json:"size_w"`
-	SizeH   string `json:"size_h"`
-	AlignH  string `json:"align_h"`
-	AlignV  string `json:"align_v"`
-}
-
-type Behavior struct {
-	Trigger Trigger
-	Action  Action
-}
-
-type Trigger struct {
-	Type   string
-	Widget string
-}
-
-type Action struct {
-	Type    string
-	Transit string
-}
-
-type Launch struct {
-	Screen string
-}
-
-type Color struct {
-	Id    string
-	Value string
-}
-
-type String struct {
-	Lang string
-	Defs []Def
-}
-
-type Def struct {
-	Id    string
-	Value string
-}
 
 func main() {
 	// Parse command
@@ -135,10 +50,17 @@ func main() {
 	fs.Parse(os.Args[3:])
 
 	mock := parseConfigs()
-	opt := Options{
+	opt := gen.Options{
 		OutDir: *outDir,
 	}
-	gen(&opt, &mock, genId)
+	//gen(&opt, &mock, genId)
+	g := gen.NewGenerator(&opt, &mock, genId)
+	if g == nil {
+		fmt.Printf("Invalid gen ID: %s\n", genId)
+		printUsage()
+		os.Exit(ExitCodeError)
+	}
+	g.Generate()
 }
 
 func printUsage() {
@@ -165,7 +87,7 @@ func printVersion() {
 	fmt.Println("mocker version \"" + Version + "\"")
 }
 
-func parseConfigs() (mock Mock) {
+func parseConfigs() (mock gen.Mock) {
 	filename := "Mockerfile"
 	xmlFile, err := os.Open(filename)
 	if err != nil {

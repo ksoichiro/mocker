@@ -1,4 +1,4 @@
-package main
+package gen
 
 import (
 	"fmt"
@@ -7,6 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+type AndroidGenerator struct {
+	opt  *Options
+	mock *Mock
+}
 
 // Default layout params for Android's widgets
 type AndroidWidget struct {
@@ -80,6 +85,10 @@ func defineAndroidWidgets() {
 		SizeW:    sizeFill,
 		SizeH:    sizeFill,
 	})
+}
+
+func (g *AndroidGenerator) Generate() {
+	genAndroid(g.opt, g.mock)
 }
 
 func genAndroid(opt *Options, mock *Mock) {

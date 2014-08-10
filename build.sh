@@ -2,7 +2,7 @@
 
 PROG=mocker
 
-go build -o $PROG ./...
+go build -o $PROG
 
 rm -rf out
 ./$PROG gen android
