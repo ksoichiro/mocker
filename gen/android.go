@@ -171,15 +171,9 @@ func genAndroid(opt *Options, mock *Mock) {
 }
 
 func genAndroidManifest(mock *Mock, outDir string) {
-	filename := filepath.Join(outDir, "AndroidManifest.xml")
-	f := createFile(filename)
-	defer f.Close()
 	var buf CodeBuffer
 	genCodeAndroidManifest(mock, &buf)
-	for _, s := range buf {
-		f.WriteString(s + "\n")
-	}
-	f.Close()
+	genFile(&buf, filepath.Join(outDir, "AndroidManifest.xml"))
 }
 
 func genCodeAndroidManifest(mock *Mock, buf *CodeBuffer) {
@@ -220,15 +214,9 @@ func genCodeAndroidManifest(mock *Mock, buf *CodeBuffer) {
 }
 
 func genAndroidGradle(mock *Mock, outDir string) {
-	filename := filepath.Join(outDir, "build.gradle")
-	f := createFile(filename)
-	defer f.Close()
 	var buf CodeBuffer
 	genCodeAndroidGradle(mock, &buf)
-	for _, s := range buf {
-		f.WriteString(s + "\n")
-	}
-	f.Close()
+	genFile(&buf, filepath.Join(outDir, "build.gradle"))
 }
 
 func genCodeAndroidGradle(mock *Mock, buf *CodeBuffer) {
@@ -276,16 +264,9 @@ android {
 }
 
 func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
-	activityId := strings.Title(screen.Id)
-	filename := filepath.Join(packageDir, activityId+"Activity.java")
-	f := createFile(filename)
-	defer f.Close()
 	var buf CodeBuffer
 	genCodeAndroidActivity(mock, screen, &buf)
-	for _, s := range buf {
-		f.WriteString(s + "\n")
-	}
-	f.Close()
+	genFile(&buf, filepath.Join(packageDir, strings.Title(screen.Id)+"Activity.java"))
 }
 
 func genCodeAndroidActivity(mock *Mock, screen Screen, buf *CodeBuffer) {
@@ -342,15 +323,9 @@ public class %sActivity extends Activity {
 }
 
 func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
-	filename := filepath.Join(layoutDir, "activity_"+screen.Id+".xml")
-	f := createFile(filename)
-	defer f.Close()
 	var buf CodeBuffer
 	genCodeAndroidActivityLayout(mock, screen, &buf)
-	for _, s := range buf {
-		f.WriteString(s + "\n")
-	}
-	f.Close()
+	genFile(&buf, filepath.Join(layoutDir, "activity_"+screen.Id+".xml"))
 }
 
 func genCodeAndroidActivityLayout(mock *Mock, screen Screen, buf *CodeBuffer) {
@@ -425,15 +400,9 @@ func genAndroidLayoutRecur(view *View, top bool, buf *CodeBuffer) {
 }
 
 func genAndroidStrings(mock *Mock, valuesDir string) {
-	filename := filepath.Join(valuesDir, "strings_app.xml")
-	f := createFile(filename)
-	defer f.Close()
 	var buf CodeBuffer
 	genCodeAndroidStrings(mock, &buf)
-	for _, s := range buf {
-		f.WriteString(s + "\n")
-	}
-	f.Close()
+	genFile(&buf, filepath.Join(valuesDir, "strings_app.xml"))
 }
 
 func genCodeAndroidStrings(mock *Mock, buf *CodeBuffer) {
@@ -462,15 +431,9 @@ func genAndroidLocalizedStrings(mock *Mock, resDir string) {
 		}
 		valuesDir := filepath.Join(resDir, "values"+suffix)
 		os.MkdirAll(valuesDir, 0777)
-		filename := filepath.Join(valuesDir, "strings.xml")
-		f := createFile(filename)
-		defer f.Close()
 		var buf CodeBuffer
 		genCodeAndroidLocalizedStrings(s, &buf)
-		for _, s := range buf {
-			f.WriteString(s + "\n")
-		}
-		f.Close()
+		genFile(&buf, filepath.Join(valuesDir, "strings.xml"))
 	}
 }
 
@@ -485,15 +448,9 @@ func genCodeAndroidLocalizedStrings(s String, buf *CodeBuffer) {
 }
 
 func genAndroidColors(mock *Mock, valuesDir string) {
-	filename := filepath.Join(valuesDir, "colors.xml")
-	f := createFile(filename)
-	defer f.Close()
 	var buf CodeBuffer
 	genCodeAndroidColors(mock, &buf)
-	for _, s := range buf {
-		f.WriteString(s + "\n")
-	}
-	f.Close()
+	genFile(&buf, filepath.Join(valuesDir, "colors.xml"))
 }
 
 func genCodeAndroidColors(mock *Mock, buf *CodeBuffer) {
@@ -509,15 +466,9 @@ func genCodeAndroidColors(mock *Mock, buf *CodeBuffer) {
 }
 
 func genAndroidStyles(mock *Mock, valuesDir string) {
-	filename := filepath.Join(valuesDir, "styles.xml")
-	f := createFile(filename)
-	defer f.Close()
 	var buf CodeBuffer
 	genCodeAndroidStyles(mock, &buf)
-	for _, s := range buf {
-		f.WriteString(s + "\n")
-	}
-	f.Close()
+	genFile(&buf, filepath.Join(valuesDir, "styles.xml"))
 }
 
 func genCodeAndroidStyles(mock *Mock, buf *CodeBuffer) {

@@ -22,3 +22,12 @@ type CodeBuffer []string
 func (b *CodeBuffer) add(format string, a ...interface{}) {
 	*b = append(*b, fmt.Sprintf(format, a...))
 }
+
+func genFile(buf *CodeBuffer, filename string) {
+	f := createFile(filename)
+	defer f.Close()
+	for _, s := range *buf {
+		f.WriteString(s + "\n")
+	}
+	f.Close()
+}
