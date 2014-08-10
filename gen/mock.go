@@ -15,6 +15,7 @@ type Mock struct {
 
 type Meta struct {
 	Android Android
+	Ios     Ios
 }
 
 type Android struct {
@@ -26,6 +27,11 @@ type Android struct {
 	CompileSdkVersion   string `json:"compile_sdk_version"`
 	VersionCode         int    `json:"version_code"`
 	VersionName         string `json:"version_name"`
+}
+
+type Ios struct {
+	Project          string
+	DeploymentTarget string `json:"deployment_target"`
 }
 
 type Screen struct {
