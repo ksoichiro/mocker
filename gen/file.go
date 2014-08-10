@@ -1,9 +1,16 @@
 package gen
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+)
 
 // Overwrite and create new file
 func createFile(filename string) (f *os.File) {
+	dir := filepath.Dir(filename)
+	if !fileExists(dir) {
+		os.MkdirAll(dir, 0777)
+	}
 	if fileExists(filename) {
 		os.Remove(filename)
 	}

@@ -380,7 +380,6 @@ func genAndroidLocalizedStrings(mock *Mock, resDir string) {
 			suffix = ""
 		}
 		valuesDir := filepath.Join(resDir, "values"+suffix)
-		os.MkdirAll(valuesDir, 0777)
 		var buf CodeBuffer
 		genCodeAndroidLocalizedStrings(s, &buf)
 		genFile(&buf, filepath.Join(valuesDir, "strings.xml"))
