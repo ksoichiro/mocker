@@ -14,77 +14,36 @@ type AndroidGenerator struct {
 	mock *Mock
 }
 
-// Default layout params for Android's widgets
-type AndroidWidget struct {
-	Name        string
-	Textable    bool
-	Gravity     string
-	Orientation string
-	SizeW       string
-	SizeH       string
-}
-
-type AndroidWidgetsDef struct {
-	widgets map[string]AndroidWidget
-}
-
-func (d *AndroidWidgetsDef) Add(name string, w AndroidWidget) {
-	if d.widgets == nil {
-		d.widgets = make(map[string]AndroidWidget)
-	}
-	d.widgets[name] = w
-}
-
-func (d *AndroidWidgetsDef) Has(name string) (ret bool) {
-	ret = false
-	if _, ok := d.widgets[name]; ok {
-		ret = true
-	}
-	return
-}
-
-func (d *AndroidWidgetsDef) Get(name string) AndroidWidget {
-	return d.widgets[name]
-}
-
-var awd AndroidWidgetsDef
-
-const (
-	gravityCenter       = "center"
-	gravityCenterV      = "center_v"
-	sizeFill            = "fill"
-	sizeWrap            = "wrap"
-	orientationVertical = "vertical"
-)
+var awd WidgetsDef
 
 func defineAndroidWidgets() {
-	awd = AndroidWidgetsDef{}
-	awd.Add("button", AndroidWidget{
+	awd = WidgetsDef{}
+	awd.Add("button", Widget{
 		Name:     "Button",
 		Textable: true,
-		Gravity:  gravityCenter,
-		SizeW:    sizeFill,
-		SizeH:    sizeWrap,
+		Gravity:  GravityCenter,
+		SizeW:    SizeFill,
+		SizeH:    SizeWrap,
 	})
-	awd.Add("label", AndroidWidget{
+	awd.Add("label", Widget{
 		Name:     "TextView",
 		Textable: true,
-		Gravity:  gravityCenter,
-		SizeW:    sizeFill,
-		SizeH:    sizeWrap,
+		Gravity:  GravityCenter,
+		SizeW:    SizeFill,
+		SizeH:    SizeWrap,
 	})
-	awd.Add("linear", AndroidWidget{
+	awd.Add("linear", Widget{
 		Name:        "LinearLayout",
 		Textable:    false,
-		Orientation: orientationVertical,
-		SizeW:       sizeFill,
-		SizeH:       sizeFill,
+		Orientation: OrientationVertical,
+		SizeW:       SizeFill,
+		SizeH:       SizeFill,
 	})
-	awd.Add("relative", AndroidWidget{
+	awd.Add("relative", Widget{
 		Name:     "RelativeLayout",
 		Textable: false,
-		SizeW:    sizeFill,
-		SizeH:    sizeFill,
+		SizeW:    SizeFill,
+		SizeH:    SizeFill,
 	})
 }
 
@@ -366,9 +325,9 @@ func genAndroidLayoutRecur(view *View, top bool, buf *CodeBuffer) {
 	if view.Gravity != "" {
 		gravity := ""
 		switch view.Gravity {
-		case gravityCenter:
+		case GravityCenter:
 			gravity = "center"
-		case gravityCenterV:
+		case GravityCenterV:
 			gravity = "center_vertical"
 		}
 		buf.add(`    android:gravity="%s"`, gravity)
@@ -479,12 +438,12 @@ func genCodeAndroidStyles(mock *Mock, buf *CodeBuffer) {
 </resources>`)
 }
 
-func convertAndroidLayoutOptions(widget AndroidWidget, view *View) (lo LayoutOptions) {
+func convertAndroidLayoutOptions(widget Widget, view *View) (lo LayoutOptions) {
 	base := view.SizeW
 	if base == "" {
 		base = widget.SizeW
 	}
-	if base == sizeFill {
+	if base == SizeFill {
 		lo.Width = "match_parent"
 	} else {
 		lo.Width = "wrap_content"
@@ -493,7 +452,7 @@ func convertAndroidLayoutOptions(widget AndroidWidget, view *View) (lo LayoutOpt
 	if base == "" {
 		base = widget.SizeH
 	}
-	if base == sizeFill {
+	if base == SizeFill {
 		lo.Height = "match_parent"
 	} else {
 		lo.Height = "wrap_content"
