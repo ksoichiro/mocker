@@ -174,7 +174,7 @@ func genAndroidManifest(mock *Mock, outDir string) {
 	filename := filepath.Join(outDir, "AndroidManifest.xml")
 	f := createFile(filename)
 	defer f.Close()
-	var buf []string
+	var buf CodeBuffer
 	genCodeAndroidManifest(mock, &buf)
 	for _, s := range buf {
 		f.WriteString(s + "\n")
@@ -182,8 +182,8 @@ func genAndroidManifest(mock *Mock, outDir string) {
 	f.Close()
 }
 
-func genCodeAndroidManifest(mock *Mock, buf *[]string) {
-	*buf = append(*buf, fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+func genCodeAndroidManifest(mock *Mock, buf *CodeBuffer) {
+	buf.add(`<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="%s" >
 
@@ -191,7 +191,7 @@ func genCodeAndroidManifest(mock *Mock, buf *[]string) {
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >`, mock.Meta.Android.Package))
+        android:theme="@style/AppTheme" >`, mock.Meta.Android.Package)
 
 	launcherId := mock.Launch.Screen
 	for i := range mock.Screens {
@@ -199,7 +199,7 @@ func genCodeAndroidManifest(mock *Mock, buf *[]string) {
 		activityId := strings.Title(screen.Id)
 		if screen.Id == launcherId {
 			// Launcher
-			*buf = append(*buf, fmt.Sprintf(`        <activity
+			buf.add(`        <activity
             android:label="@string/activity_title_%s"
             android:name=".%sActivity" >
             <intent-filter>
@@ -207,15 +207,15 @@ func genCodeAndroidManifest(mock *Mock, buf *[]string) {
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>`, screen.Id, activityId))
+        </activity>`, screen.Id, activityId)
 		} else {
-			*buf = append(*buf, fmt.Sprintf(`        <activity
+			buf.add(`        <activity
             android:label="@string/activity_title_%s"
-            android:name=".%sActivity" />`, screen.Id, activityId))
+            android:name=".%sActivity" />`, screen.Id, activityId)
 		}
 	}
 
-	*buf = append(*buf, `    </application>
+	buf.add(`    </application>
 </manifest>`)
 }
 
@@ -223,7 +223,7 @@ func genAndroidGradle(mock *Mock, outDir string) {
 	filename := filepath.Join(outDir, "build.gradle")
 	f := createFile(filename)
 	defer f.Close()
-	var buf []string
+	var buf CodeBuffer
 	genCodeAndroidGradle(mock, &buf)
 	for _, s := range buf {
 		f.WriteString(s + "\n")
@@ -231,16 +231,16 @@ func genAndroidGradle(mock *Mock, outDir string) {
 	f.Close()
 }
 
-func genCodeAndroidGradle(mock *Mock, buf *[]string) {
-	*buf = append(*buf, fmt.Sprintf(`buildscript {
+func genCodeAndroidGradle(mock *Mock, buf *CodeBuffer) {
+	buf.add(`buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:%s'
     }
-}`, mock.Meta.Android.GradlePluginVersion))
-	*buf = append(*buf, fmt.Sprintf(`apply plugin: 'com.android.application'
+}`, mock.Meta.Android.GradlePluginVersion)
+	buf.add(`apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion '%s'
@@ -272,7 +272,7 @@ android {
 		mock.Meta.Android.MinSdkVersion,
 		mock.Meta.Android.TargetSdkVersion,
 		mock.Meta.Android.VersionCode,
-		mock.Meta.Android.VersionName))
+		mock.Meta.Android.VersionName)
 }
 
 func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
@@ -280,7 +280,7 @@ func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
 	filename := filepath.Join(packageDir, activityId+"Activity.java")
 	f := createFile(filename)
 	defer f.Close()
-	var buf []string
+	var buf CodeBuffer
 	genCodeAndroidActivity(mock, screen, &buf)
 	for _, s := range buf {
 		f.WriteString(s + "\n")
@@ -288,9 +288,9 @@ func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
 	f.Close()
 }
 
-func genCodeAndroidActivity(mock *Mock, screen Screen, buf *[]string) {
+func genCodeAndroidActivity(mock *Mock, screen Screen, buf *CodeBuffer) {
 	activityId := strings.Title(screen.Id)
-	*buf = append(*buf, fmt.Sprintf(`package %s;
+	buf.add(`package %s;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -307,7 +307,7 @@ public class %sActivity extends Activity {
     }
 
     private void init() {`,
-		mock.Meta.Android.Package, activityId, screen.Id))
+		mock.Meta.Android.Package, activityId, screen.Id)
 
 	for i := range screen.Behaviors {
 		b := screen.Behaviors[i]
@@ -315,9 +315,9 @@ public class %sActivity extends Activity {
 			// Not support other than click currently
 			continue
 		}
-		*buf = append(*buf, fmt.Sprintf(`        findViewById(R.id.%s).setOnClickListener(new View.OnClickListener() {
+		buf.add(`        findViewById(R.id.%s).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {`, b.Trigger.Widget))
+            public void onClick(View v) {`, b.Trigger.Widget)
 
 		if b.Action.Type == "transit_forward" {
 			var id string
@@ -327,16 +327,16 @@ public class %sActivity extends Activity {
 					id = next.Id
 				}
 			}
-			*buf = append(*buf, fmt.Sprintf(`                startActivity(new Intent(%sActivity.this, %sActivity.class));`,
+			buf.add(`                startActivity(new Intent(%sActivity.this, %sActivity.class));`,
 				strings.Title(screen.Id),
-				strings.Title(id)))
+				strings.Title(id))
 		}
 
-		*buf = append(*buf, `            }
+		buf.add(`            }
         });`)
 	}
 
-	*buf = append(*buf, `    }
+	buf.add(`    }
 
 }`)
 }
@@ -345,7 +345,7 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 	filename := filepath.Join(layoutDir, "activity_"+screen.Id+".xml")
 	f := createFile(filename)
 	defer f.Close()
-	var buf []string
+	var buf CodeBuffer
 	genCodeAndroidActivityLayout(mock, screen, &buf)
 	for _, s := range buf {
 		f.WriteString(s + "\n")
@@ -353,15 +353,15 @@ func genAndroidActivityLayout(mock *Mock, layoutDir string, screen Screen) {
 	f.Close()
 }
 
-func genCodeAndroidActivityLayout(mock *Mock, screen Screen, buf *[]string) {
-	*buf = append(*buf, `<?xml version="1.0" encoding="utf-8"?>`)
+func genCodeAndroidActivityLayout(mock *Mock, screen Screen, buf *CodeBuffer) {
+	buf.add(`<?xml version="1.0" encoding="utf-8"?>`)
 	if 0 < len(screen.Layout) {
 		// Only parse root view
 		genAndroidLayoutRecur(&screen.Layout[0], true, buf)
 	}
 }
 
-func genAndroidLayoutRecur(view *View, top bool, buf *[]string) {
+func genAndroidLayoutRecur(view *View, top bool, buf *CodeBuffer) {
 	if !awd.Has(view.Type) {
 		return
 	}
@@ -375,18 +375,18 @@ func genAndroidLayoutRecur(view *View, top bool, buf *[]string) {
 	lo := convertAndroidLayoutOptions(widget, view)
 	hasSub := 0 < len(view.Sub)
 
-	*buf = append(*buf, fmt.Sprintf(`<%s%s`, widget.Name, xmlns))
+	buf.add(`<%s%s`, widget.Name, xmlns)
 	if view.Id != "" {
-		*buf = append(*buf, fmt.Sprintf(`    android:id="@+id/%s"`, view.Id))
+		buf.add(`    android:id="@+id/%s"`, view.Id)
 	}
 	if view.Below != "" {
-		*buf = append(*buf, fmt.Sprintf(`    android:layout_below="@id/%s"`, view.Below))
+		buf.add(`    android:layout_below="@id/%s"`, view.Below)
 	}
 	if widget.Textable && view.Label != "" {
-		*buf = append(*buf, fmt.Sprintf(`    android:text="@string/%s"`, view.Label))
+		buf.add(`    android:text="@string/%s"`, view.Label)
 	}
 	if widget.Orientation != "" {
-		*buf = append(*buf, fmt.Sprintf(`    android:orientation="%s"`, widget.Orientation))
+		buf.add(`    android:orientation="%s"`, widget.Orientation)
 	}
 	if view.Gravity != "" {
 		gravity := ""
@@ -396,31 +396,31 @@ func genAndroidLayoutRecur(view *View, top bool, buf *[]string) {
 		case gravityCenterV:
 			gravity = "center_vertical"
 		}
-		*buf = append(*buf, fmt.Sprintf(`    android:gravity="%s"`, gravity))
+		buf.add(`    android:gravity="%s"`, gravity)
 	} else if widget.Gravity != "" {
-		*buf = append(*buf, fmt.Sprintf(`    android:gravity="%s"`, widget.Gravity))
+		buf.add(`    android:gravity="%s"`, widget.Gravity)
 	}
 	if view.Margin != "" {
 		if view.Margin == "normal" {
-			*buf = append(*buf, fmt.Sprintf(`    android:layout_margin="%s"`, "16dp"))
+			buf.add(`    android:layout_margin="%s"`, "16dp")
 		} else {
-			*buf = append(*buf, fmt.Sprintf(`    android:layout_margin="%s"`, view.Margin))
+			buf.add(`    android:layout_margin="%s"`, view.Margin)
 		}
 	}
-	*buf = append(*buf, fmt.Sprintf(`    android:layout_width="%s"
+	buf.add(`    android:layout_width="%s"
     android:layout_height="%s"`,
 		lo.Width,
-		lo.Height))
+		lo.Height)
 
 	if hasSub {
 		// Print sub views recursively
-		*buf = append(*buf, `    >`)
+		buf.add(`    >`)
 		for _, sv := range view.Sub {
 			genAndroidLayoutRecur(&sv, false, buf)
 		}
-		*buf = append(*buf, fmt.Sprintf(`</%s>`, widget.Name))
+		buf.add(`</%s>`, widget.Name)
 	} else {
-		*buf = append(*buf, `    />`)
+		buf.add(`    />`)
 	}
 }
 
@@ -428,7 +428,7 @@ func genAndroidStrings(mock *Mock, valuesDir string) {
 	filename := filepath.Join(valuesDir, "strings_app.xml")
 	f := createFile(filename)
 	defer f.Close()
-	var buf []string
+	var buf CodeBuffer
 	genCodeAndroidStrings(mock, &buf)
 	for _, s := range buf {
 		f.WriteString(s + "\n")
@@ -436,20 +436,20 @@ func genAndroidStrings(mock *Mock, valuesDir string) {
 	f.Close()
 }
 
-func genCodeAndroidStrings(mock *Mock, buf *[]string) {
+func genCodeAndroidStrings(mock *Mock, buf *CodeBuffer) {
 	// App name
-	*buf = append(*buf, fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+	buf.add(`<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">%s</string>`, mock.Name))
+    <string name="app_name">%s</string>`, mock.Name)
 
 	// Activity title
 	for i := range mock.Screens {
 		screen := mock.Screens[i]
-		*buf = append(*buf, fmt.Sprintf(`    <string name="activity_title_%s">%s</string>`,
-			screen.Id, screen.Name))
+		buf.add(`    <string name="activity_title_%s">%s</string>`,
+			screen.Id, screen.Name)
 	}
 
-	*buf = append(*buf, `</resources>`)
+	buf.add(`</resources>`)
 }
 
 func genAndroidLocalizedStrings(mock *Mock, resDir string) {
@@ -465,7 +465,7 @@ func genAndroidLocalizedStrings(mock *Mock, resDir string) {
 		filename := filepath.Join(valuesDir, "strings.xml")
 		f := createFile(filename)
 		defer f.Close()
-		var buf []string
+		var buf CodeBuffer
 		genCodeAndroidLocalizedStrings(s, &buf)
 		for _, s := range buf {
 			f.WriteString(s + "\n")
@@ -474,21 +474,21 @@ func genAndroidLocalizedStrings(mock *Mock, resDir string) {
 	}
 }
 
-func genCodeAndroidLocalizedStrings(s String, buf *[]string) {
-	*buf = append(*buf, `<?xml version="1.0" encoding="utf-8"?>
+func genCodeAndroidLocalizedStrings(s String, buf *CodeBuffer) {
+	buf.add(`<?xml version="1.0" encoding="utf-8"?>
 <resources>`)
 	for j := range s.Defs {
 		def := s.Defs[j]
-		*buf = append(*buf, fmt.Sprintf(`    <string name="%s">%s</string>`, def.Id, def.Value))
+		buf.add(`    <string name="%s">%s</string>`, def.Id, def.Value)
 	}
-	*buf = append(*buf, `</resources>`)
+	buf.add(`</resources>`)
 }
 
 func genAndroidColors(mock *Mock, valuesDir string) {
 	filename := filepath.Join(valuesDir, "colors.xml")
 	f := createFile(filename)
 	defer f.Close()
-	var buf []string
+	var buf CodeBuffer
 	genCodeAndroidColors(mock, &buf)
 	for _, s := range buf {
 		f.WriteString(s + "\n")
@@ -496,23 +496,23 @@ func genAndroidColors(mock *Mock, valuesDir string) {
 	f.Close()
 }
 
-func genCodeAndroidColors(mock *Mock, buf *[]string) {
-	*buf = append(*buf, `<?xml version="1.0" encoding="utf-8"?>
+func genCodeAndroidColors(mock *Mock, buf *CodeBuffer) {
+	buf.add(`<?xml version="1.0" encoding="utf-8"?>
 <resources>`)
 
 	for i := range mock.Colors {
 		c := mock.Colors[i]
-		*buf = append(*buf, fmt.Sprintf(`    <color name="%s">%s</color>`, c.Id, c.Value))
+		buf.add(`    <color name="%s">%s</color>`, c.Id, c.Value)
 	}
 
-	*buf = append(*buf, `</resources>`)
+	buf.add(`</resources>`)
 }
 
 func genAndroidStyles(mock *Mock, valuesDir string) {
 	filename := filepath.Join(valuesDir, "styles.xml")
 	f := createFile(filename)
 	defer f.Close()
-	var buf []string
+	var buf CodeBuffer
 	genCodeAndroidStyles(mock, &buf)
 	for _, s := range buf {
 		f.WriteString(s + "\n")
@@ -520,8 +520,8 @@ func genAndroidStyles(mock *Mock, valuesDir string) {
 	f.Close()
 }
 
-func genCodeAndroidStyles(mock *Mock, buf *[]string) {
-	*buf = append(*buf, `<?xml version="1.0" encoding="utf-8"?>
+func genCodeAndroidStyles(mock *Mock, buf *CodeBuffer) {
+	buf.add(`<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
     </style>
