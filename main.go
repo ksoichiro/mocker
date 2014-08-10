@@ -1,12 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 
+	"github.com/ksoichiro/mocker/encoding/mockerfile"
 	"github.com/ksoichiro/mocker/gen"
 )
 
@@ -97,7 +97,7 @@ func parseConfigs() (mock gen.Mock) {
 	defer xmlFile.Close()
 
 	b, _ := ioutil.ReadAll(xmlFile)
-	err = json.Unmarshal(b, &mock)
+	err = mockerfile.Unmarshal(b, &mock)
 	if err != nil {
 		fmt.Println("Error unmarshaling Mockerfile", err)
 		return

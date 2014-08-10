@@ -1,6 +1,7 @@
 {
     "name": "Mocker Demo",
     "meta": {
+        # Optional data for each platforms
         "android": {
             "package": "com.gihub.ksoichiro.demo",
             "gradle_plugin_version": "0.12.+",
