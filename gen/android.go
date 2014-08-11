@@ -334,6 +334,13 @@ func genAndroidLayoutRecur(view *View, top bool, buf *CodeBuffer) {
 			buf.add(`    android:layout_margin="%s"`, view.Margin)
 		}
 	}
+	if view.Padding != "" {
+		if view.Padding == "normal" {
+			buf.add(`    android:padding="%s"`, "16dp")
+		} else {
+			buf.add(`    android:padding="%s"`, view.Padding)
+		}
+	}
 	buf.add(`    android:layout_width="%s"
     android:layout_height="%s"`,
 		lo.Width,

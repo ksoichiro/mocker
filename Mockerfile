@@ -25,6 +25,7 @@
                 {
                     "type": "relative",
                     "gravity": "center",
+                    "padding": "normal",
                     "sub": [
                         {
                             "id": "label_demo",
@@ -33,8 +34,7 @@
                             "size_w": "fill",
                             "size_h": "wrap",
                             "align_h": "top",
-                            "align_v": "center",
-                            "margin": "normal"
+                            "align_v": "center"
                         },
                         {
                             "id": "next",
@@ -44,8 +44,7 @@
                             "size_w": "fill",
                             "size_h": "wrap",
                             "align_h": "top",
-                            "align_v": "center",
-                            "margin": "normal"
+                            "align_v": "center"
                         }
                     ]
                 }
