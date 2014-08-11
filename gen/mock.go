@@ -1,6 +1,7 @@
 package gen
 
 type Options struct {
+	InDir  string
 	OutDir string
 }
 

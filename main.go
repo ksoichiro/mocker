@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/ksoichiro/mocker/encoding/mockerfile"
 	"github.com/ksoichiro/mocker/gen"
@@ -45,14 +46,16 @@ func main() {
 	// Options for gen subcommand
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	var (
+		inDir  = fs.String("in", ".", "Input directory which has Mockerfile.")
 		outDir = fs.String("out", "out", "Output directory for generated codes.")
 	)
 	fs.Parse(os.Args[3:])
 
-	mock := parseConfigs()
 	opt := gen.Options{
+		InDir:  *inDir,
 		OutDir: *outDir,
 	}
+	mock := parseConfigs(&opt)
 	//gen(&opt, &mock, genId)
 	g := gen.NewGenerator(&opt, &mock, genId)
 	if g == nil {
@@ -79,6 +82,7 @@ Generator:
     ios      Objective-C code for iOS app
 
   options:
+    -in=".": Input directory which has Mockerfile
     -out="out": Output directory for generated codes
 `, os.Args[0])
 }
@@ -87,8 +91,8 @@ func printVersion() {
 	fmt.Println("mocker version \"" + Version + "\"")
 }
 
-func parseConfigs() (mock gen.Mock) {
-	filename := "Mockerfile"
+func parseConfigs(opt *gen.Options) (mock gen.Mock) {
+	filename := filepath.Join(opt.InDir, "Mockerfile")
 	xmlFile, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("Error opening file", err)
