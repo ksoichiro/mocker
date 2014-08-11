@@ -121,6 +121,11 @@ func (g *AndroidGenerator) Generate() {
 		defer wg.Done()
 		genAndroidStyles(mock, dir)
 	}(g.mock, valuesDir)
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genAndroidDefaultDimensions(mock, dir)
+	}(g.mock, valuesDir)
 
 	wg.Wait()
 }
@@ -329,14 +334,14 @@ func genAndroidLayoutRecur(view *View, top bool, buf *CodeBuffer) {
 	}
 	if view.Margin != "" {
 		if view.Margin == "normal" {
-			buf.add(`    android:layout_margin="%s"`, "16dp")
+			buf.add(`    android:layout_margin="%s"`, "@dimen/default_margin")
 		} else {
 			buf.add(`    android:layout_margin="%s"`, view.Margin)
 		}
 	}
 	if view.Padding != "" {
 		if view.Padding == "normal" {
-			buf.add(`    android:padding="%s"`, "16dp")
+			buf.add(`    android:padding="%s"`, "@dimen/default_padding")
 		} else {
 			buf.add(`    android:padding="%s"`, view.Padding)
 		}
@@ -431,6 +436,30 @@ func genCodeAndroidStyles(mock *Mock, buf *CodeBuffer) {
     <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
     </style>
 </resources>`)
+}
+
+func genAndroidDefaultDimensions(mock *Mock, valuesDir string) {
+	var buf CodeBuffer
+	genCodeAndroidDefaultDimensions(mock, &buf)
+	genFile(&buf, filepath.Join(valuesDir, "dimens_default.xml"))
+}
+
+func genCodeAndroidDefaultDimensions(mock *Mock, buf *CodeBuffer) {
+	buf.add(`<?xml version="1.0" encoding="utf-8"?>
+<resources>`)
+
+	var defaults = []struct {
+		name  string
+		value string
+	}{
+		{"default_margin", "16dp"},
+		{"default_padding", "16dp"},
+	}
+	for _, d := range defaults {
+		buf.add(`    <dimen name="%s">%s</dimen>`, d.name, d.value)
+	}
+
+	buf.add(`</resources>`)
 }
 
 func convertAndroidLayoutOptions(widget Widget, view *View) (lo LayoutOptions) {
