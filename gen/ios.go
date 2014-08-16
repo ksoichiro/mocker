@@ -57,6 +57,13 @@ func (g *IosGenerator) Generate() {
 		genIosContentsXcWorkspaceData(mock, dir)
 	}(g.mock, outDir)
 
+	// Generate .gitignore
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosGitignore(mock, dir)
+	}(g.mock, outDir)
+
 	// Generate main.m
 	wg.Add(1)
 	go func(mock *Mock, dir string) {
@@ -157,6 +164,19 @@ func genCodeIosContentsXcWorkspaceData(mock *Mock, buf *CodeBuffer) {
 </Workspace>
 `,
 		mock.Meta.Ios.Project)
+}
+
+func genIosGitignore(mock *Mock, outDir string) {
+	var buf CodeBuffer
+	genCodeIosGitignore(mock, &buf)
+	genFile(&buf, filepath.Join(outDir, ".gitignore"))
+}
+
+func genCodeIosGitignore(mock *Mock, buf *CodeBuffer) {
+	buf.add(`*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcworkspace/contents.xcworkspacedata
+.DS_Store`)
 }
 
 func genIosMain(mock *Mock, dir string) {
