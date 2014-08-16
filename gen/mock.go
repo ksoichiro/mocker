@@ -32,6 +32,7 @@ type Android struct {
 
 type Ios struct {
 	Project          string
+	ClassPrefix      string `json:"class_prefix"`
 	DeploymentTarget string `json:"deployment_target"`
 }
 

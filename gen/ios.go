@@ -52,6 +52,13 @@ func (g *IosGenerator) Generate() {
 
 	var wg sync.WaitGroup
 
+	// Generate main.m
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosMain(mock, dir)
+	}(g.mock, outDir)
+
 	// Generate ViewControllers
 	for _, screen := range g.mock.Screens {
 		wg.Add(1)
@@ -75,6 +82,27 @@ func (g *IosGenerator) Generate() {
 	}(g.mock, projectDir)
 
 	wg.Wait()
+}
+
+func genIosMain(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosMain(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, "main.m"))
+}
+
+func genCodeIosMain(mock *Mock, buf *CodeBuffer) {
+	buf.add(`#import <UIKit/UIKit.h>
+
+#import "%sAppDelegate.h"
+
+int main(int argc, char * argv[])
+{
+    @autoreleasepool {
+        return UIApplicationMain(argc, argv, nil, NSStringFromClass([%sAppDelegate class]));
+    }
+}`,
+		mock.Meta.Ios.ClassPrefix,
+		mock.Meta.Ios.ClassPrefix)
 }
 
 func genIosViewController(mock *Mock, dir string, screen Screen) {
