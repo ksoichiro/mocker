@@ -59,6 +59,13 @@ func (g *IosGenerator) Generate() {
 		genIosMain(mock, dir)
 	}(g.mock, outDir)
 
+	// Generate Info.plist
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosInfoPlist(mock, dir)
+	}(g.mock, outDir)
+
 	// Generate InfoPlist.strings
 	wg.Add(1)
 	go func(mock *Mock, dir string) {
@@ -117,6 +124,54 @@ int main(int argc, char * argv[])
 }`,
 		mock.Meta.Ios.ClassPrefix,
 		mock.Meta.Ios.ClassPrefix)
+}
+
+func genIosInfoPlist(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosInfoPlist(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, mock.Meta.Ios.Project+"-Info.plist"))
+}
+
+func genCodeIosInfoPlist(mock *Mock, buf *CodeBuffer) {
+	buf.add(`<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>${PRODUCT_NAME}</string>
+	<key>CFBundleExecutable</key>
+	<string>${EXECUTABLE_NAME}</string>
+	<key>CFBundleIdentifier</key>
+	<string>%s.${PRODUCT_NAME:rfc1034identifier}</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>${PRODUCT_NAME}</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+</dict>
+</plist>`,
+		mock.Meta.Ios.CompanyIdentifier)
 }
 
 func genIosInfoPlistStrings(mock *Mock, dir string) {

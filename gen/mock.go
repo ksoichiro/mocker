@@ -31,9 +31,10 @@ type Android struct {
 }
 
 type Ios struct {
-	Project          string
-	ClassPrefix      string `json:"class_prefix"`
-	DeploymentTarget string `json:"deployment_target"`
+	Project           string
+	ClassPrefix       string `json:"class_prefix"`
+	CompanyIdentifier string `json:"company_identifier"`
+	DeploymentTarget  string `json:"deployment_target"`
 }
 
 type Screen struct {
