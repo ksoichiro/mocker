@@ -426,6 +426,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	cp := mock.Meta.Ios.ClassPrefix
 	fileId := 0
 	fileIds := map[string]XcObject{}
+	// PBXBuildFile
 	fileIds["Foundation.framework"] = XcObject{"Foundation.framework", genIosFileId(&fileId), "Frameworks", genIosFileId(&fileId)}
 	fileIds["CoreGraphics.framework"] = XcObject{"CoreGraphics.framework", genIosFileId(&fileId), "Frameworks", genIosFileId(&fileId)}
 	fileIds["UIKit.framework"] = XcObject{"UIKit.framework", genIosFileId(&fileId), "Frameworks", genIosFileId(&fileId)}
@@ -433,6 +434,8 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	fileIds["main.m"] = XcObject{"main.m", genIosFileId(&fileId), "Sources", genIosFileId(&fileId)}
 	fileIds[cp+"AppDelegate.m"] = XcObject{cp + "AppDelegate.m", genIosFileId(&fileId), "Sources", genIosFileId(&fileId)}
 	fileIds["Images.xcassets"] = XcObject{"Images.xcassets", genIosFileId(&fileId), "Resources", genIosFileId(&fileId)}
+	// PBXFrameworksBuildPhase
+	fileIds["Frameworks"] = XcObject{"Frameworks", genIosFileId(&fileId), "", ""}
 
 	// Header
 	buf.add(`// !$*UTF8*$!
@@ -472,8 +475,24 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 /* Begin PBXFileReference section */`)
 	buf.add(`/* End PBXFileReference section */`)
 
+	// PBXFrameworksBuildPhase section
 	buf.add(`
-/* Begin PBXFrameworksBuildPhase section */`)
+/* Begin PBXFrameworksBuildPhase section */
+		%s /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (`, fileIds["Frameworks"])
+	for _, key := range []string{
+		"Foundation.framework",
+		"CoreGraphics.framework",
+		"UIKit.framework",
+	} {
+		buf.add(`				%s /* %s in %s */,`,
+			fileIds[key].Id, fileIds[key].Name, fileIds[key].Location)
+	}
+	buf.add(`			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};`)
 	buf.add(`/* End PBXFrameworksBuildPhase section */`)
 
 	buf.add(`
