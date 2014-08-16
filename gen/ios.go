@@ -87,6 +87,18 @@ func (g *IosGenerator) Generate() {
 		genIosPch(mock, dir)
 	}(g.mock, outDir)
 
+	// Generate AppDelegate
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosAppDelegateHeader(mock, dir)
+	}(g.mock, outDir)
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosAppDelegateImplementation(mock, dir)
+	}(g.mock, outDir)
+
 	// Generate ViewControllers
 	for _, screen := range g.mock.Screens {
 		wg.Add(1)
@@ -232,6 +244,46 @@ func genCodeIosPch(mock *Mock, buf *CodeBuffer) {
     #import <UIKit/UIKit.h>
     #import <Foundation/Foundation.h>
 #endif`)
+}
+
+func genIosAppDelegateHeader(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosAppDelegateHeader(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, mock.Meta.Ios.ClassPrefix+"AppDelegate.h"))
+}
+
+func genCodeIosAppDelegateHeader(mock *Mock, buf *CodeBuffer) {
+	buf.add(`#import <UIKit/UIKit.h>
+
+@interface %sAppDelegate : UIResponder <UIApplicationDelegate>
+
+@property (strong, nonatomic) UIWindow *window;
+
+@end`, mock.Meta.Ios.ClassPrefix)
+}
+
+func genIosAppDelegateImplementation(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosAppDelegateImplementation(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, mock.Meta.Ios.ClassPrefix+"AppDelegate.h"))
+}
+
+func genCodeIosAppDelegateImplementation(mock *Mock, buf *CodeBuffer) {
+	buf.add(`#import "%sAppDelegate.h"
+
+@implementation %sAppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    self.window.backgroundColor = [UIColor whiteColor];
+    [self.window makeKeyAndVisible];
+    return YES;
+}
+
+@end`,
+		mock.Meta.Ios.ClassPrefix,
+		mock.Meta.Ios.ClassPrefix)
 }
 
 func genIosViewController(mock *Mock, dir string, screen Screen) {
