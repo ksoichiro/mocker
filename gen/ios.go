@@ -415,8 +415,24 @@ func genIosProjectPbxproj(mock *Mock, dir string) {
 	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project+".xcodeproj", "project.pbxproj"))
 }
 
+type XcObject struct {
+	Name     string
+	Id       string
+	Location string
+	FileRef  string
+}
+
 func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
+	cp := mock.Meta.Ios.ClassPrefix
 	fileId := 0
+	fileIds := map[string]XcObject{}
+	fileIds["Foundation.framework"] = XcObject{"Foundation.framework", genIosFileId(&fileId), "Frameworks", genIosFileId(&fileId)}
+	fileIds["CoreGraphics.framework"] = XcObject{"CoreGraphics.framework", genIosFileId(&fileId), "Frameworks", genIosFileId(&fileId)}
+	fileIds["UIKit.framework"] = XcObject{"UIKit.framework", genIosFileId(&fileId), "Frameworks", genIosFileId(&fileId)}
+	fileIds["InfoPlist.strings"] = XcObject{"InfoPlist.strings", genIosFileId(&fileId), "Resources", genIosFileId(&fileId)}
+	fileIds["main.m"] = XcObject{"main.m", genIosFileId(&fileId), "Sources", genIosFileId(&fileId)}
+	fileIds[cp+"AppDelegate.m"] = XcObject{cp + "AppDelegate.m", genIosFileId(&fileId), "Sources", genIosFileId(&fileId)}
+	fileIds["Images.xcassets"] = XcObject{"Images.xcassets", genIosFileId(&fileId), "Resources", genIosFileId(&fileId)}
 
 	// Header
 	buf.add(`// !$*UTF8*$!
@@ -427,8 +443,25 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	objectVersion = 46;
 	objects = {`)
 
+	// PBXBuildFile section
 	buf.add(`
 /* Begin PBXBuildFile section */`)
+	for _, key := range []string{
+		"Foundation.framework",
+		"CoreGraphics.framework",
+		"UIKit.framework",
+		"InfoPlist.strings",
+		"main.m",
+		cp + "AppDelegate.m",
+		"Images.xcassets",
+	} {
+		buf.add(`		%s /* %s in %s */ = {isa = PBXBuildFile; fileRef = %s /* %s */; };`,
+			fileIds[key].Id,
+			fileIds[key].Name,
+			fileIds[key].Location,
+			fileIds[key].FileRef,
+			fileIds[key].Name)
+	}
 	buf.add(`/* End PBXBuildFile section */`)
 
 	buf.add(`
@@ -487,5 +520,5 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 
 func genIosFileId(i *int) string {
 	*i++
-	return fmt.Sprintf("%024d", *i)
+	return fmt.Sprintf("%024X", *i)
 }
