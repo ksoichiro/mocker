@@ -48,8 +48,6 @@ func (g *IosGenerator) Generate() {
 	outDir := g.opt.OutDir
 	projectDir := filepath.Join(outDir, g.mock.Meta.Ios.Project)
 
-	// TODO Generate base file set
-
 	var wg sync.WaitGroup
 
 	// Generate contents.xcworkspacedata
@@ -132,6 +130,13 @@ func (g *IosGenerator) Generate() {
 		defer wg.Done()
 		genIosColors(mock, dir)
 	}(g.mock, projectDir)
+
+	// Generate project.pbxproj
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosProjectPbxproj(mock, dir)
+	}(g.mock, outDir)
 
 	wg.Wait()
 }
@@ -380,4 +385,15 @@ func genIosLocalizedStrings(mock *Mock, dir string) {
 func genIosColors(mock *Mock, dir string) {
 	// TODO
 	fmt.Println("iOS: Colors generator: Not implemented...")
+}
+
+func genIosProjectPbxproj(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosProjectPbxproj(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project+".xcodeproj", "project.pbxproj"))
+}
+
+func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
+	buf.add(`
+`)
 }
