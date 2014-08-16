@@ -66,6 +66,13 @@ func (g *IosGenerator) Generate() {
 		genIosInfoPlistStrings(mock, dir)
 	}(g.mock, outDir)
 
+	// Generate Prefix.pch
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosPch(mock, dir)
+	}(g.mock, outDir)
+
 	// Generate ViewControllers
 	for _, screen := range g.mock.Screens {
 		wg.Add(1)
@@ -120,6 +127,31 @@ func genIosInfoPlistStrings(mock *Mock, dir string) {
 
 func genCodeIosInfoPlistStrings(mock *Mock, buf *CodeBuffer) {
 	buf.add(`/* Localized versions of Info.plist keys */`)
+}
+
+func genIosPch(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosPch(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, mock.Meta.Ios.Project+"-Prefix.pch"))
+}
+
+func genCodeIosPch(mock *Mock, buf *CodeBuffer) {
+	buf.add(`//
+//  Prefix header
+//
+//  The contents of this file are implicitly included at the beginning of every source file.
+//
+
+#import <Availability.h>
+
+#ifndef __IPHONE_3_0
+#warning "This project uses features only available in iOS SDK 3.0 and later."
+#endif
+
+#ifdef __OBJC__
+    #import <UIKit/UIKit.h>
+    #import <Foundation/Foundation.h>
+#endif`)
 }
 
 func genIosViewController(mock *Mock, dir string, screen Screen) {
