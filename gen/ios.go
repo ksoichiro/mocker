@@ -52,6 +52,13 @@ func (g *IosGenerator) Generate() {
 
 	var wg sync.WaitGroup
 
+	// Generate contents.xcworkspacedata
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosContentsXcWorkspaceData(mock, dir)
+	}(g.mock, outDir)
+
 	// Generate main.m
 	wg.Add(1)
 	go func(mock *Mock, dir string) {
@@ -103,6 +110,24 @@ func (g *IosGenerator) Generate() {
 	}(g.mock, projectDir)
 
 	wg.Wait()
+}
+
+func genIosContentsXcWorkspaceData(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosContentsXcWorkspaceData(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project+".xcodeproj", "project.xcworkspace", "contents.xcworkspacedata"))
+}
+
+func genCodeIosContentsXcWorkspaceData(mock *Mock, buf *CodeBuffer) {
+	buf.add(`<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "self:%s.xcodeproj">
+   </FileRef>
+</Workspace>
+`,
+		mock.Meta.Ios.Project)
 }
 
 func genIosMain(mock *Mock, dir string) {
