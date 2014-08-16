@@ -59,6 +59,13 @@ func (g *IosGenerator) Generate() {
 		genIosMain(mock, dir)
 	}(g.mock, outDir)
 
+	// Generate InfoPlist.strings
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosInfoPlistStrings(mock, dir)
+	}(g.mock, outDir)
+
 	// Generate ViewControllers
 	for _, screen := range g.mock.Screens {
 		wg.Add(1)
@@ -103,6 +110,16 @@ int main(int argc, char * argv[])
 }`,
 		mock.Meta.Ios.ClassPrefix,
 		mock.Meta.Ios.ClassPrefix)
+}
+
+func genIosInfoPlistStrings(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosInfoPlistStrings(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, "en.lproj", "InfoPlist.strings"))
+}
+
+func genCodeIosInfoPlistStrings(mock *Mock, buf *CodeBuffer) {
+	buf.add(`/* Localized versions of Info.plist keys */`)
 }
 
 func genIosViewController(mock *Mock, dir string, screen Screen) {
