@@ -328,7 +328,7 @@ func genCodeIosImagesXcAssetsLaunchImage(mock *Mock, buf *CodeBuffer) {
       "orientation" : "portrait",
       "idiom" : "iphone",
       "extent" : "full-screen",
-      "minimum-system-version" : "7.0",
+      "minimum-system-version" : "%s",
       "scale" : "2x"
     },
     {
@@ -336,7 +336,7 @@ func genCodeIosImagesXcAssetsLaunchImage(mock *Mock, buf *CodeBuffer) {
       "idiom" : "iphone",
       "subtype" : "retina4",
       "extent" : "full-screen",
-      "minimum-system-version" : "7.0",
+      "minimum-system-version" : "%s",
       "scale" : "2x"
     }
   ],
@@ -344,7 +344,9 @@ func genCodeIosImagesXcAssetsLaunchImage(mock *Mock, buf *CodeBuffer) {
     "version" : 1,
     "author" : "xcode"
   }
-}`)
+}`,
+		mock.Meta.Ios.DeploymentTarget,
+		mock.Meta.Ios.DeploymentTarget)
 }
 
 func genIosAppDelegateHeader(mock *Mock, dir string) {
