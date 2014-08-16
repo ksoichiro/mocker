@@ -87,6 +87,18 @@ func (g *IosGenerator) Generate() {
 		genIosPch(mock, dir)
 	}(g.mock, outDir)
 
+	// Generate Images.xcassets
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosImagesXcAssetsAppIcon(mock, dir)
+	}(g.mock, outDir)
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosImagesXcAssetsLaunchImage(mock, dir)
+	}(g.mock, outDir)
+
 	// Generate AppDelegate
 	wg.Add(1)
 	go func(mock *Mock, dir string) {
@@ -244,6 +256,70 @@ func genCodeIosPch(mock *Mock, buf *CodeBuffer) {
     #import <UIKit/UIKit.h>
     #import <Foundation/Foundation.h>
 #endif`)
+}
+
+func genIosImagesXcAssetsAppIcon(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosImagesXcAssetsAppIcon(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, "Images.xcassets", "AppIcon.appiconset", "Contents.json"))
+}
+
+func genCodeIosImagesXcAssetsAppIcon(mock *Mock, buf *CodeBuffer) {
+	buf.add(`{
+  "images" : [
+    {
+      "idiom" : "iphone",
+      "size" : "29x29",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "iphone",
+      "size" : "40x40",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "iphone",
+      "size" : "60x60",
+      "scale" : "2x"
+    }
+  ],
+  "info" : {
+    "version" : 1,
+    "author" : "xcode"
+  }
+}`)
+}
+
+func genIosImagesXcAssetsLaunchImage(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosImagesXcAssetsLaunchImage(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, "Images.xcassets", "LaunchImage.launchimage", "Contents.json"))
+}
+
+func genCodeIosImagesXcAssetsLaunchImage(mock *Mock, buf *CodeBuffer) {
+	buf.add(`{
+  "images" : [
+    {
+      "orientation" : "portrait",
+      "idiom" : "iphone",
+      "extent" : "full-screen",
+      "minimum-system-version" : "7.0",
+      "scale" : "2x"
+    },
+    {
+      "orientation" : "portrait",
+      "idiom" : "iphone",
+      "subtype" : "retina4",
+      "extent" : "full-screen",
+      "minimum-system-version" : "7.0",
+      "scale" : "2x"
+    }
+  ],
+  "info" : {
+    "version" : 1,
+    "author" : "xcode"
+  }
+}`)
 }
 
 func genIosAppDelegateHeader(mock *Mock, dir string) {
