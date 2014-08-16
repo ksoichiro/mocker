@@ -341,7 +341,7 @@ func genCodeIosAppDelegateHeader(mock *Mock, buf *CodeBuffer) {
 func genIosAppDelegateImplementation(mock *Mock, dir string) {
 	var buf CodeBuffer
 	genCodeIosAppDelegateImplementation(mock, &buf)
-	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, mock.Meta.Ios.ClassPrefix+"AppDelegate.h"))
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, mock.Meta.Ios.ClassPrefix+"AppDelegate.m"))
 }
 
 func genCodeIosAppDelegateImplementation(mock *Mock, buf *CodeBuffer) {
