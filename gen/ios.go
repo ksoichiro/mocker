@@ -414,6 +414,76 @@ func genIosProjectPbxproj(mock *Mock, dir string) {
 }
 
 func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
+	fileId := 0
+
+	// Header
+	buf.add(`// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {`)
+
 	buf.add(`
-`)
+/* Begin PBXBuildFile section */`)
+	buf.add(`/* End PBXBuildFile section */`)
+
+	buf.add(`
+/* Begin PBXContainerItemProxy section */`)
+	buf.add(`/* End PBXContainerItemProxy section */`)
+
+	buf.add(`
+/* Begin PBXFileReference section */`)
+	buf.add(`/* End PBXFileReference section */`)
+
+	buf.add(`
+/* Begin PBXFrameworksBuildPhase section */`)
+	buf.add(`/* End PBXFrameworksBuildPhase section */`)
+
+	buf.add(`
+/* Begin PBXGroup section */`)
+	buf.add(`/* End PBXGroup section */`)
+
+	buf.add(`
+/* Begin PBXNativeTarget section */`)
+	buf.add(`/* End PBXNativeTarget section */`)
+
+	buf.add(`
+/* Begin PBXProject section */`)
+	buf.add(`/* End PBXProject section */`)
+
+	buf.add(`
+/* Begin PBXResourcesBuildPhase section */`)
+	buf.add(`/* End PBXResourcesBuildPhase section */`)
+
+	buf.add(`
+/* Begin PBXSourcesBuildPhase section */`)
+	buf.add(`/* End PBXSourcesBuildPhase section */`)
+
+	buf.add(`
+/* Begin PBXTargetDependency section */`)
+	buf.add(`/* End PBXTargetDependency section */`)
+
+	buf.add(`
+/* Begin PBXVariantGroup section */`)
+	buf.add(`/* End PBXVariantGroup section */`)
+
+	buf.add(`
+/* Begin XCBuildConfiguration section */`)
+	buf.add(`/* End XCBuildConfiguration section */`)
+
+	buf.add(`
+/* Begin XCConfigurationList section */`)
+	buf.add(`/* End XCConfigurationList section */`)
+
+	// Footer
+	buf.add(`	};
+	rootObject = %s /* Project object */;
+}`, genIosFileId(&fileId))
+}
+
+func genIosFileId(i *int) string {
+	*i++
+	return fmt.Sprintf("%024d", *i)
 }
