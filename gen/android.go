@@ -94,6 +94,13 @@ func (g *AndroidGenerator) Generate() {
 		genAndroidGradle(mock, dir)
 	}(g.mock, outDir)
 
+	// Generate .gitignore
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genAndroidGitignore(mock, dir)
+	}(g.mock, outDir)
+
 	// Generate Activities
 	for _, screen := range g.mock.Screens {
 		wg.Add(1)
@@ -220,6 +227,25 @@ android {
 		mock.Meta.Android.TargetSdkVersion,
 		mock.Meta.Android.VersionCode,
 		mock.Meta.Android.VersionName)
+}
+
+func genAndroidGitignore(mock *Mock, outDir string) {
+	var buf CodeBuffer
+	genCodeAndroidGitignore(mock, &buf)
+	genFile(&buf, filepath.Join(outDir, ".gitignore"))
+}
+
+func genCodeAndroidGitignore(mock *Mock, buf *CodeBuffer) {
+	buf.add(`# Gradle
+build/
+.gradle/
+
+# Android Studio
+.idea
+.iml/
+
+# Android
+local.properties`)
 }
 
 func genAndroidActivity(mock *Mock, packageDir string, screen Screen) {
