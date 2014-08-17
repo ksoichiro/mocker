@@ -547,7 +547,11 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	// PBXVariantGroup
 	pbxVariantGroup["InfoPlist.strings"] = pbxObject{Name: "InfoPlist.strings", Id: genIosFileId(&fileId)}
 	// PBXFrameworksBuildPhase
-	pbxFrameworksBuildPhases["Frameworks"] = pbxObject{Name: "Frameworks", Id: genIosFileId(&fileId)}
+	pbxFrameworksBuildPhases["Frameworks"] = pbxObject{Name: "Frameworks", Id: genIosFileId(&fileId), Children: []pbxObject{
+		pbxBuildFiles["Foundation.framework"],
+		pbxBuildFiles["CoreGraphics.framework"],
+		pbxBuildFiles["UIKit.framework"],
+	}}
 	// PBXGroup
 	pbxGroups["Supporting Files"] = pbxObject{Name: "Supporting Files", Id: genIosFileId(&fileId), Children: []pbxObject{
 		pbxFileReferences[pj+"-Info.plist"],
@@ -620,15 +624,11 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (`, pbxFrameworksBuildPhases["Frameworks"].Name)
-	for _, key := range []string{
-		"Foundation.framework",
-		"CoreGraphics.framework",
-		"UIKit.framework",
-	} {
+	for _, child := range pbxFrameworksBuildPhases["Frameworks"].Children {
 		buf.add(`				%s /* %s in %s */,`,
-			pbxBuildFiles[key].Id,
-			pbxBuildFiles[key].Name,
-			pbxBuildFiles[key].Location)
+			child.Id,
+			child.Name,
+			child.Location)
 	}
 	buf.add(`			);
 			runOnlyForDeploymentPostprocessing = 0;
