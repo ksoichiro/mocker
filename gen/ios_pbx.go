@@ -109,12 +109,20 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Path:              pj + "-Info.plist",
 		SourceTree:        "<group>",
 	}
-	pbxFileReferences["en"] = pbxObject{
-		Name:              "en",
+	pbxFileReferences["Base|InfoPlist.strings"] = pbxObject{
+		Name:              "Base",
 		Id:                genIosFileId(&fileId),
 		LastKnownFileType: "text.plist.strings",
 		ShowNameInFileRef: true,
-		Path:              "en.lproj/InfoPlist.strings",
+		Path:              "Base.lproj/InfoPlist.strings",
+		SourceTree:        "<group>",
+	}
+	pbxFileReferences["ja|InfoPlist.strings"] = pbxObject{
+		Name:              "ja",
+		Id:                genIosFileId(&fileId),
+		LastKnownFileType: "text.plist.strings",
+		ShowNameInFileRef: true,
+		Path:              "ja.lproj/InfoPlist.strings",
 		SourceTree:        "<group>",
 	}
 	pbxFileReferences["main.m"] = pbxObject{
@@ -191,7 +199,8 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Name: "InfoPlist.strings",
 		Id:   genIosFileId(&fileId),
 		Children: []pbxObject{
-			pbxFileReferences["en"],
+			pbxFileReferences["Base|InfoPlist.strings"],
+			pbxFileReferences["ja|InfoPlist.strings"],
 		},
 	}
 	// PBXBuildFile
@@ -625,6 +634,8 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
+				ja,
 			);
 			mainGroup = %s;
 			productRefGroup = %s /* %s */;

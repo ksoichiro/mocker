@@ -260,7 +260,8 @@ func genCodeIosInfoPlist(mock *Mock, buf *CodeBuffer) {
 func genIosInfoPlistStrings(mock *Mock, dir string) {
 	var buf CodeBuffer
 	genCodeIosInfoPlistStrings(mock, &buf)
-	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, "en.lproj", "InfoPlist.strings"))
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, "Base.lproj", "InfoPlist.strings"))
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.Project, "ja.lproj", "InfoPlist.strings"))
 }
 
 func genCodeIosInfoPlistStrings(mock *Mock, buf *CodeBuffer) {
