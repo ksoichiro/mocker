@@ -34,6 +34,7 @@ type Ios struct {
 	Project           string
 	ClassPrefix       string `json:"class_prefix"`
 	CompanyIdentifier string `json:"company_identifier"`
+	OrganizationName  string `json:"organization_name"`
 	DeploymentTarget  string `json:"deployment_target"`
 }
 

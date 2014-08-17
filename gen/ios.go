@@ -428,6 +428,8 @@ type pbxObject struct {
 	Path                   string
 	SourceTree             string
 	BuildConfigurationList string
+	MainGroup              string
+	ProductRefGroup        string
 	Children               []pbxObject
 	ProductReference       string
 }
@@ -441,6 +443,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	pbxFrameworksBuildPhases := map[string]pbxObject{}
 	pbxGroups := map[string]pbxObject{}
 	pbxNativeTargets := map[string]pbxObject{}
+	pbxProjects := map[string]pbxObject{}
 	pbxResourcesBuildPhases := map[string]pbxObject{}
 	pbxSourcesBuildPhases := map[string]pbxObject{}
 	pbxVariantGroups := map[string]pbxObject{}
@@ -614,6 +617,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	// PBXNativeTarget
 	pbxNativeTargets[pj] = pbxObject{
 		Name: pj,
+		Id:   genIosFileId(&fileId),
 		BuildConfigurationList: "PBXNativeTarget \"" + pj + "\"",
 		Children: []pbxObject{
 			pbxSourcesBuildPhases["Sources"],
@@ -621,6 +625,17 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			pbxResourcesBuildPhases["Resources"],
 		},
 		ProductReference: pj + ".app",
+	}
+	// PBXProject
+	pbxProjects["Project object"] = pbxObject{
+		Name: "Project object",
+		Id:   genIosFileId(&fileId),
+		BuildConfigurationList: "PBXProjectTarget \"" + pj + "\"",
+		MainGroup:              "mainGroup",
+		ProductRefGroup:        "Products",
+		Children: []pbxObject{
+			pbxNativeTargets[pj],
+		},
 	}
 
 	// Header
@@ -775,8 +790,49 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	buf.add(`/* End PBXNativeTarget section */`)
 
+	// FIXME PBXProject section
 	buf.add(`
 /* Begin PBXProject section */`)
+	for _, project := range pbxProjects {
+		buf.add(`		%s /* %s */ = {
+			isa = PBXProject;
+			attributes = {`,
+			project.Id,
+			project.Name,
+		)
+		buf.add(`				CLASSPREFIX = %s;
+				LastUpgradeCheck = 510;
+				ORGANIZATIONNAME = %s;
+			};
+			buildConfigurationList = %s /* Build configuration list for %s */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = %s;
+			productRefGroup = %s /* %s */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (`,
+			cp,
+			mock.Meta.Ios.OrganizationName,
+			xcConfigurationLists[project.BuildConfigurationList].Id,
+			xcConfigurationLists[project.BuildConfigurationList].Name,
+			pbxGroups[project.MainGroup].Id,
+			pbxGroups[project.ProductRefGroup].Id,
+			pbxGroups[project.ProductRefGroup].Name,
+		)
+		for _, child := range project.Children {
+			buf.add(`				%s /* %s */,`,
+				child.Id,
+				child.Name,
+			)
+			buf.add(`			);`)
+		}
+		buf.add(`		};`)
+	}
 	buf.add(`/* End PBXProject section */`)
 
 	buf.add(`
@@ -806,7 +862,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	// Footer
 	buf.add(`	};
 	rootObject = %s /* Project object */;
-}`, genIosFileId(&fileId))
+}`, pbxProjects["Project object"].Id)
 }
 
 func genIosFileId(i *int) string {

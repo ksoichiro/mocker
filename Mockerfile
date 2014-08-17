@@ -15,6 +15,7 @@
         "ios": {
             "project": "MockerDemo",
             "company_identifier": "com.github.ksoichiro",
+            "organization_name": "ksoichiro",
             "class_prefix": "MD",
             "deployment_target": "7.0"
         }
