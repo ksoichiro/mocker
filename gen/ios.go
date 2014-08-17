@@ -458,6 +458,26 @@ func genIosLocalizedStrings(mock *Mock, dir string) {
 }
 
 func genIosColors(mock *Mock, dir string) {
-	// TODO
-	fmt.Println("iOS: Colors generator: Not implemented...")
+	var buf CodeBuffer
+	genCodeIosColorHeader(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, "UIColor+Extension.h"))
+	buf = CodeBuffer{}
+	genCodeIosColorImplementation(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, "UIColor+Extension.m"))
+}
+
+func genCodeIosColorHeader(mock *Mock, buf *CodeBuffer) {
+	buf.add(`#import <UIKit/UIKit.h>
+
+@interface UIColor (Extension)
+
+@end`)
+}
+
+func genCodeIosColorImplementation(mock *Mock, buf *CodeBuffer) {
+	buf.add(`#import "UIColor+Extension.h"
+
+@interface UIColor (Extension)
+
+@end`)
 }

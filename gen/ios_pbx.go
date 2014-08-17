@@ -153,6 +153,23 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			SourceTree:        "<group>",
 		}
 	}
+	// Extension
+	pbxFileReferences["UIColor+Extension.h"] = pbxObject{
+		Name:              "UIColor+Extension.h",
+		Id:                genIosFileId(&fileId),
+		FileEncoding:      "4",
+		LastKnownFileType: "sourcecode.c.h",
+		Path:              "UIColor+Extension.h",
+		SourceTree:        "<group>",
+	}
+	pbxFileReferences["UIColor+Extension.m"] = pbxObject{
+		Name:              "UIColor+Extension.m",
+		Id:                genIosFileId(&fileId),
+		FileEncoding:      "4",
+		LastKnownFileType: "sourcecode.c.objc",
+		Path:              "UIColor+Extension.m",
+		SourceTree:        "<group>",
+	}
 	// PBXVariantGroup
 	pbxVariantGroups["InfoPlist.strings"] = pbxObject{
 		Name: "InfoPlist.strings",
@@ -214,6 +231,13 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			FileRef:  pbxFileReferences[name].Id,
 		}
 	}
+	// Extensions
+	pbxBuildFiles["UIColor+Extension.m"] = pbxObject{
+		Name:     "UIColor+Extension.m",
+		Id:       genIosFileId(&fileId),
+		Location: "Sources",
+		FileRef:  pbxFileReferences["UIColor+Extension.m"].Id,
+	}
 	// PBXFrameworksBuildPhase
 	pbxFrameworksBuildPhases["Frameworks"] = pbxObject{Name: "Frameworks", Id: genIosFileId(&fileId), Children: []pbxObject{
 		pbxBuildFiles["Foundation.framework"],
@@ -235,6 +259,8 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		vcFileRefs = append(vcFileRefs, pbxFileReferences[cp+strings.Title(screen.Id)+"ViewController.h"])
 		vcFileRefs = append(vcFileRefs, pbxFileReferences[cp+strings.Title(screen.Id)+"ViewController.m"])
 	}
+	vcFileRefs = append(vcFileRefs, pbxFileReferences["UIColor+Extension.h"])
+	vcFileRefs = append(vcFileRefs, pbxFileReferences["UIColor+Extension.m"])
 	vcFileRefs = append(vcFileRefs,
 		pbxFileReferences["Images.xcassets"],
 		pbxGroups["Supporting Files"])
@@ -260,6 +286,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		vcBuildFiles = append(vcBuildFiles, pbxBuildFiles[cp+strings.Title(screen.Id)+"ViewController.m"])
 	}
 	vcBuildFiles = append(vcBuildFiles, pbxBuildFiles[cp+"AppDelegate.m"])
+	vcBuildFiles = append(vcBuildFiles, pbxBuildFiles["UIColor+Extension.m"])
 	pbxSourcesBuildPhases["Sources"] = pbxObject{
 		Name:     "Sources",
 		Id:       genIosFileId(&fileId),
@@ -448,12 +475,12 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			s += fmt.Sprintf(` name = %s;`, fileRef.Name)
 		}
 		path := fileRef.Path
-		if strings.Contains(path, "-") {
+		if strings.ContainsAny(path, "-+<") {
 			path = "\"" + path + "\""
 		}
 		s += fmt.Sprintf(` path = %s;`, path)
 		sourceTree := fileRef.SourceTree
-		if strings.Contains(sourceTree, "<") {
+		if strings.ContainsAny(sourceTree, "-+<") {
 			sourceTree = "\"" + sourceTree + "\""
 		}
 		s += fmt.Sprintf(` sourceTree = %s; };`, sourceTree)
