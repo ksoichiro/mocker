@@ -438,7 +438,7 @@ type pbxObject struct {
 func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	cp := mock.Meta.Ios.ClassPrefix
 	pj := mock.Meta.Ios.Project
-	fileId := 0
+	fileId := 0xDE5E0B8D
 	pbxBuildFiles := map[string]pbxObject{}
 	pbxFileReferences := map[string]pbxObject{}
 	pbxFrameworksBuildPhases := map[string]pbxObject{}
@@ -498,7 +498,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	pbxFileReferences[pj+".app"] = pbxObject{
 		Name:             pj + ".app",
 		Id:               genIosFileId(&fileId),
-		ExplicitFileType: "wrapper.framework",
+		ExplicitFileType: "wrapper.application",
 		IncludeInIndex:   "0",
 		Path:             pj + ".app",
 		SourceTree:       "BUILT_PRODUCTS_DIR",
@@ -559,13 +559,14 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Name:              "en",
 		Id:                genIosFileId(&fileId),
 		LastKnownFileType: "text.plist.strings",
+		ShowNameInFileRef: true,
 		Path:              "en.lproj/InfoPlist.strings",
 		SourceTree:        "<group>",
 	}
 	pbxFileReferences["main.m"] = pbxObject{
 		Name:              "main.m",
 		Id:                genIosFileId(&fileId),
-		LastKnownFileType: "sourcecode.c.h",
+		LastKnownFileType: "sourcecode.c.objc",
 		Path:              "main.m",
 		SourceTree:        "<group>",
 	}
@@ -758,7 +759,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	pbxProjects["Project object"] = pbxObject{
 		Name: "Project object",
 		Id:   genIosFileId(&fileId),
-		BuildConfigurationList: "PBXProjectTarget \"" + pj + "\"",
+		BuildConfigurationList: "PBXProject \"" + pj + "\"",
 		MainGroup:              "mainGroup",
 		ProductRefGroup:        "Products",
 		Children: []pbxObject{
@@ -819,7 +820,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		if strings.Contains(path, "-") {
 			path = "\"" + path + "\""
 		}
-		s += fmt.Sprintf(` path = %s;`, fileRef.Path)
+		s += fmt.Sprintf(` path = %s;`, path)
 		sourceTree := fileRef.SourceTree
 		if strings.Contains(sourceTree, "<") {
 			sourceTree = "\"" + sourceTree + "\""
@@ -832,10 +833,13 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	// PBXFrameworksBuildPhase section
 	buf.add(`
 /* Begin PBXFrameworksBuildPhase section */
-		%s /* Frameworks */ = {
+		%s /* %s */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
-			files = (`, pbxFrameworksBuildPhases["Frameworks"].Name)
+			files = (`,
+		pbxFrameworksBuildPhases["Frameworks"].Id,
+		pbxFrameworksBuildPhases["Frameworks"].Name,
+	)
 	for _, child := range pbxFrameworksBuildPhases["Frameworks"].Children {
 		buf.add(`				%s /* %s in %s */,`,
 			child.Id,
@@ -929,7 +933,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			project.Name,
 		)
 		buf.add(`				CLASSPREFIX = %s;
-				LastUpgradeCheck = 510;
+				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = %s;
 			};
 			buildConfigurationList = %s /* Build configuration list for %s */;
@@ -999,7 +1003,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			sourcesBuildPhase.Name,
 		)
 		for _, child := range sourcesBuildPhase.Children {
-			buf.add(`				%s /* %s in %s /,`,
+			buf.add(`				%s /* %s in %s */,`,
 				child.Id,
 				child.Name,
 				child.Location,
@@ -1097,5 +1101,6 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 
 func genIosFileId(i *int) string {
 	*i++
-	return fmt.Sprintf("%024X", *i)
+	return fmt.Sprintf("%08X199F4B790030B30B", *i)
+
 }
