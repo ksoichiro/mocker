@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"encoding/hex"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -470,14 +471,67 @@ func genCodeIosColorHeader(mock *Mock, buf *CodeBuffer) {
 	buf.add(`#import <UIKit/UIKit.h>
 
 @interface UIColor (Extension)
+`)
 
+	for _, c := range mock.Colors {
+		buf.add(`+ (UIColor *)%sColor;`, c.Id)
+	}
+
+	buf.add(`
 @end`)
 }
 
 func genCodeIosColorImplementation(mock *Mock, buf *CodeBuffer) {
 	buf.add(`#import "UIColor+Extension.h"
 
-@interface UIColor (Extension)
+@implementation UIColor (Extension)
+`)
 
+	for _, c := range mock.Colors {
+		a, r, g, b := hexToInt(c.Value)
+		buf.add(`+ (UIColor *)%sColor { return [UIColor colorWithRed:%d/255.0 green:%d/255.0 blue:%d/255.0 alpha:%d/255.0]; }`, c.Id, r, g, b, a)
+	}
+
+	buf.add(`
 @end`)
+}
+
+func hexToInt(hexString string) (a, r, g, b int) {
+	raw := hexString
+	// Remove prefix '#'
+	if strings.HasPrefix(raw, "#") {
+		braw := []byte(raw)
+		raw = string(braw[1:])
+	}
+
+	// Format hex string
+	if len(raw) == 8 {
+		// AARRGGBB: Do nothing
+	} else if len(raw) == 6 {
+		// RRGGBB: Insert alpha(FF)
+		raw = "FF" + raw
+	} else if len(raw) == 4 {
+		// ARGB: Duplicate each hex
+		braw := []byte(raw)
+		sa := string(braw[0:1])
+		sr := string(braw[1:2])
+		sg := string(braw[2:3])
+		sb := string(braw[3:4])
+		raw = sa + sa + sr + sr + sg + sg + sb + sb
+	} else if len(raw) == 3 {
+		// RGB: Insert alpha(F) and duplicate each hex
+		raw = "F" + raw
+		braw := []byte(raw)
+		sa := string(braw[0:1])
+		sr := string(braw[1:2])
+		sg := string(braw[2:3])
+		sb := string(braw[3:4])
+		raw = sa + sa + sr + sr + sg + sg + sb + sb
+	}
+	bytes, _ := hex.DecodeString(raw)
+	a = int(bytes[0])
+	r = int(bytes[1])
+	g = int(bytes[2])
+	b = int(bytes[3])
+	return
 }
