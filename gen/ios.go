@@ -533,7 +533,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	pbxFileReferences[cp+"AppDelegate.m"] = pbxObject{
 		Name:              cp + "AppDelegate.m",
-		Id:                pbxBuildFiles[cp+"AppDelegate.m"].Id,
+		Id:                pbxBuildFiles[cp+"AppDelegate.m"].FileRef,
 		LastKnownFileType: "sourcecode.c.objc",
 		Path:              cp + "AppDelegate.m",
 		SourceTree:        "<group>",
@@ -614,9 +614,23 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		pbxGroups["Products"],
 	}}
 	// PBXSourcesBuildPhase
-	pbxSourcesBuildPhases["Sources"] = pbxObject{Name: "Sources", Id: genIosFileId(&fileId)}
+	pbxSourcesBuildPhases["Sources"] = pbxObject{
+		Name: "Sources",
+		Id:   genIosFileId(&fileId),
+		Children: []pbxObject{
+			pbxBuildFiles["main.m"],
+			pbxBuildFiles[cp+"AppDelegate.m"],
+		},
+	}
 	// PBXResourcesBuildPhase
-	pbxResourcesBuildPhases["Resources"] = pbxObject{Name: "Resources", Id: genIosFileId(&fileId)}
+	pbxResourcesBuildPhases["Resources"] = pbxObject{
+		Name: "Resources",
+		Id:   genIosFileId(&fileId),
+		Children: []pbxObject{
+			pbxBuildFiles["InfoPlist.strings"],
+			pbxBuildFiles["Images.xcassets"],
+		},
+	}
 	// XCConfigurationList
 	xcConfigurationLists["PBXProject \""+pj+"\""] = pbxObject{Name: "PBXProject \"" + pj + "\"", Id: genIosFileId(&fileId)}
 	xcConfigurationLists["PBXNativeTarget \""+pj+"\""] = pbxObject{Name: "PBXNativeTarget \"" + pj + "\"", Id: genIosFileId(&fileId)}
@@ -841,12 +855,52 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	buf.add(`/* End PBXProject section */`)
 
+	// PBXResourcesBuildPhase
 	buf.add(`
 /* Begin PBXResourcesBuildPhase section */`)
+	for _, resourcesBuildPhase := range pbxResourcesBuildPhases {
+		buf.add(`		%s /* %s */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (`,
+			resourcesBuildPhase.Id,
+			resourcesBuildPhase.Name,
+		)
+		for _, child := range resourcesBuildPhase.Children {
+			buf.add(`				%s /* %s in %s */,`,
+				child.Id,
+				child.Name,
+				child.Location,
+			)
+		}
+		buf.add(`			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};`)
+	}
 	buf.add(`/* End PBXResourcesBuildPhase section */`)
 
+	// PBXSourcesBuildPhase
 	buf.add(`
 /* Begin PBXSourcesBuildPhase section */`)
+	for _, sourcesBuildPhase := range pbxSourcesBuildPhases {
+		buf.add(`		%s /* %s */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (`,
+			sourcesBuildPhase.Id,
+			sourcesBuildPhase.Name,
+		)
+		for _, child := range sourcesBuildPhase.Children {
+			buf.add(`				%s /* %s in %s /,`,
+				child.Id,
+				child.Name,
+				child.Location,
+			)
+		}
+		buf.add(`			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};`)
+	}
 	buf.add(`/* End PBXSourcesBuildPhase section */`)
 
 	buf.add(`
