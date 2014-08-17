@@ -373,7 +373,9 @@ func genIosAppDelegateImplementation(mock *Mock, dir string) {
 }
 
 func genCodeIosAppDelegateImplementation(mock *Mock, buf *CodeBuffer) {
+	launchVcPrefix := mock.Meta.Ios.ClassPrefix + strings.Title(mock.Launch.Screen)
 	buf.add(`#import "%sAppDelegate.h"
+#import "%sViewController.h"
 
 @implementation %sAppDelegate
 
@@ -381,13 +383,18 @@ func genCodeIosAppDelegateImplementation(mock *Mock, buf *CodeBuffer) {
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
+    self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[%sViewController new]];
+
     [self.window makeKeyAndVisible];
     return YES;
 }
 
 @end`,
 		mock.Meta.Ios.ClassPrefix,
-		mock.Meta.Ios.ClassPrefix)
+		launchVcPrefix,
+		mock.Meta.Ios.ClassPrefix,
+		launchVcPrefix,
+	)
 }
 
 func genIosViewController(mock *Mock, dir string, screen Screen) {
