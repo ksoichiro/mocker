@@ -638,7 +638,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	xcProjectBuildConfigurations["Debug"] = pbxObject{
 		Name: "Debug",
 		Id:   genIosFileId(&fileId),
-		BuildSettings: `				ALWAYS_SEARCH_USER_PATHS = NO;
+		BuildSettings: fmt.Sprintf(`				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -667,14 +667,15 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = %s;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;`,
+			mock.Meta.Ios.DeploymentTarget),
 	}
 	xcProjectBuildConfigurations["Release"] = pbxObject{
 		Name: "Release",
 		Id:   genIosFileId(&fileId),
-		BuildSettings: `				ALWAYS_SEARCH_USER_PATHS = NO;
+		BuildSettings: fmt.Sprintf(`				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -697,9 +698,10 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = %s;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;`,
+			mock.Meta.Ios.DeploymentTarget),
 	}
 	xcNativeTargetBuildConfigurations["Debug"] = pbxObject{
 		Name: "Debug",
@@ -724,8 +726,22 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 				WRAPPER_EXTENSION = app;`,
 	}
 	// XCConfigurationList
-	xcConfigurationLists["PBXProject \""+pj+"\""] = pbxObject{Name: "PBXProject \"" + pj + "\"", Id: genIosFileId(&fileId)}
-	xcConfigurationLists["PBXNativeTarget \""+pj+"\""] = pbxObject{Name: "PBXNativeTarget \"" + pj + "\"", Id: genIosFileId(&fileId)}
+	xcConfigurationLists["PBXProject \""+pj+"\""] = pbxObject{
+		Name: "PBXProject \"" + pj + "\"",
+		Id:   genIosFileId(&fileId),
+		Children: []pbxObject{
+			xcProjectBuildConfigurations["Debug"],
+			xcProjectBuildConfigurations["Release"],
+		},
+	}
+	xcConfigurationLists["PBXNativeTarget \""+pj+"\""] = pbxObject{
+		Name: "PBXNativeTarget \"" + pj + "\"",
+		Id:   genIosFileId(&fileId),
+		Children: []pbxObject{
+			xcNativeTargetBuildConfigurations["Debug"],
+			xcNativeTargetBuildConfigurations["Release"],
+		},
+	}
 	// PBXNativeTarget
 	pbxNativeTargets[pj] = pbxObject{
 		Name: pj,
@@ -1053,6 +1069,24 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 
 	buf.add(`
 /* Begin XCConfigurationList section */`)
+	for _, c := range xcConfigurationLists {
+		buf.add(`		%s /* Build configuration list for %s */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (`,
+			c.Id,
+			c.Name,
+		)
+		for _, child := range c.Children {
+			buf.add(`				%s /* %s */,`,
+				child.Id,
+				child.Name,
+			)
+		}
+		buf.add(`			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};`)
+	}
 	buf.add(`/* End XCConfigurationList section */`)
 
 	// Footer
