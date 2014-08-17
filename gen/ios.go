@@ -903,10 +903,6 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	buf.add(`/* End PBXSourcesBuildPhase section */`)
 
-	buf.add(`
-/* Begin PBXTargetDependency section */`)
-	buf.add(`/* End PBXTargetDependency section */`)
-
 	// PBXVariantGroup
 	buf.add(`
 /* Begin PBXVariantGroup section */`)
