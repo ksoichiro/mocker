@@ -417,21 +417,13 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	// PBXBuildFile section
 	buf.add(`
 /* Begin PBXBuildFile section */`)
-	for _, key := range []string{
-		"Foundation.framework",
-		"CoreGraphics.framework",
-		"UIKit.framework",
-		"InfoPlist.strings",
-		"main.m",
-		cp + "AppDelegate.m",
-		"Images.xcassets",
-	} {
+	for _, buildFile := range pbxBuildFiles {
 		buf.add(`		%s /* %s in %s */ = {isa = PBXBuildFile; fileRef = %s /* %s */; };`,
-			pbxBuildFiles[key].Id,
-			pbxBuildFiles[key].Name,
-			pbxBuildFiles[key].Location,
-			pbxBuildFiles[key].FileRef,
-			pbxBuildFiles[key].Name)
+			buildFile.Id,
+			buildFile.Name,
+			buildFile.Location,
+			buildFile.FileRef,
+			buildFile.Name)
 	}
 	buf.add(`/* End PBXBuildFile section */`)
 
