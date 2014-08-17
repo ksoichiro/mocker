@@ -154,6 +154,22 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		}
 	}
 	// Extension
+	pbxFileReferences["UIView+Extension.h"] = pbxObject{
+		Name:              "UIView+Extension.h",
+		Id:                genIosFileId(&fileId),
+		FileEncoding:      "4",
+		LastKnownFileType: "sourcecode.c.h",
+		Path:              "UIView+Extension.h",
+		SourceTree:        "<group>",
+	}
+	pbxFileReferences["UIView+Extension.m"] = pbxObject{
+		Name:              "UIView+Extension.m",
+		Id:                genIosFileId(&fileId),
+		FileEncoding:      "4",
+		LastKnownFileType: "sourcecode.c.objc",
+		Path:              "UIView+Extension.m",
+		SourceTree:        "<group>",
+	}
 	pbxFileReferences["UIColor+Extension.h"] = pbxObject{
 		Name:              "UIColor+Extension.h",
 		Id:                genIosFileId(&fileId),
@@ -232,6 +248,12 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		}
 	}
 	// Extensions
+	pbxBuildFiles["UIView+Extension.m"] = pbxObject{
+		Name:     "UIView+Extension.m",
+		Id:       genIosFileId(&fileId),
+		Location: "Sources",
+		FileRef:  pbxFileReferences["UIView+Extension.m"].Id,
+	}
 	pbxBuildFiles["UIColor+Extension.m"] = pbxObject{
 		Name:     "UIColor+Extension.m",
 		Id:       genIosFileId(&fileId),
@@ -259,6 +281,8 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		vcFileRefs = append(vcFileRefs, pbxFileReferences[cp+strings.Title(screen.Id)+"ViewController.h"])
 		vcFileRefs = append(vcFileRefs, pbxFileReferences[cp+strings.Title(screen.Id)+"ViewController.m"])
 	}
+	vcFileRefs = append(vcFileRefs, pbxFileReferences["UIView+Extension.h"])
+	vcFileRefs = append(vcFileRefs, pbxFileReferences["UIView+Extension.m"])
 	vcFileRefs = append(vcFileRefs, pbxFileReferences["UIColor+Extension.h"])
 	vcFileRefs = append(vcFileRefs, pbxFileReferences["UIColor+Extension.m"])
 	vcFileRefs = append(vcFileRefs,
@@ -286,6 +310,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		vcBuildFiles = append(vcBuildFiles, pbxBuildFiles[cp+strings.Title(screen.Id)+"ViewController.m"])
 	}
 	vcBuildFiles = append(vcBuildFiles, pbxBuildFiles[cp+"AppDelegate.m"])
+	vcBuildFiles = append(vcBuildFiles, pbxBuildFiles["UIView+Extension.m"])
 	vcBuildFiles = append(vcBuildFiles, pbxBuildFiles["UIColor+Extension.m"])
 	pbxSourcesBuildPhases["Sources"] = pbxObject{
 		Name:     "Sources",

@@ -18,14 +18,14 @@ var iwd WidgetsDef
 func defineIosWidgets() {
 	iwd = WidgetsDef{}
 	iwd.Add("button", Widget{
-		Name:     "UIButton",
+		Name:     "button",
 		Textable: true,
 		Gravity:  GravityCenter,
 		SizeW:    SizeFill,
 		SizeH:    SizeWrap,
 	})
 	iwd.Add("label", Widget{
-		Name:     "UILabel",
+		Name:     "label",
 		Textable: true,
 		Gravity:  GravityCenter,
 		SizeW:    SizeFill,
@@ -127,6 +127,13 @@ func (g *IosGenerator) Generate() {
 			genIosViewController(mock, dir, screen, &layoutCodeBuf)
 		}(g.mock, projectDir, screen)
 	}
+
+	// Generate view helper
+	wg.Add(1)
+	go func(mock *Mock, dir string) {
+		defer wg.Done()
+		genIosViewHelper(mock, dir)
+	}(g.mock, projectDir)
 
 	// Generate resources
 	wg.Add(1)
@@ -419,6 +426,7 @@ func genCodeIosViewControllerHeader(mock *Mock, screen Screen, buf *CodeBuffer) 
 
 func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *CodeBuffer, layoutCodeBuf *CodeBuffer) {
 	buf.add(`#import "%s%sViewController.h"
+#import "UIView+Extension.h"
 
 @interface %s%sViewController ()
 
@@ -429,16 +437,16 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {`,
+    if (self) {
+        UIView *root = [[UIView alloc] initWithFrame:CGRectMake(0, 44/*FIXME*/, self.view.frame.size.width, self.view.frame.size.height)];
+        [self.view addSubview:root];
+        [root createWithViewInfo:[self viewInfo]];`,
 		mock.Meta.Ios.ClassPrefix,
 		strings.Title(screen.Id),
 		mock.Meta.Ios.ClassPrefix,
 		strings.Title(screen.Id),
 		mock.Meta.Ios.ClassPrefix,
 		strings.Title(screen.Id))
-
-	// Insert layout codes
-	buf.join(layoutCodeBuf)
 
 	buf.add(`    }
     return self;
@@ -447,6 +455,23 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+}
+
+#pragma mark - Generated layout methods
+
+/**
+ * Creates view layout information as a dictionary.
+ * Layout is not determined by generator, it's up to Objective-C.
+ * Generator just passes the structure of the views.
+ */
+- (NSDictionary *)viewInfo
+{
+    return `)
+
+	// Insert layout codes
+	buf.join(layoutCodeBuf)
+
+	buf.add(`    ;
 }
 
 @end`)
@@ -458,8 +483,202 @@ func genIosViewControllerLayout(mock *Mock, dir string, screen Screen) (buf Code
 }
 
 func genCodeIosViewControllerLayout(mock *Mock, screen Screen, buf *CodeBuffer) {
-	// TODO
-	buf.add(`        // TODO Write your layout code here`)
+	if 0 < len(screen.Layout) {
+		genIosLayoutRecur(&screen.Layout[0], true, buf)
+	}
+}
+
+func genIosLayoutRecur(view *View, top bool, buf *CodeBuffer) {
+	if !iwd.Has(view.Type) {
+		return
+	}
+	widget := iwd.Get(view.Type)
+
+	buf.add(`@{`)
+
+	matchParentW := "@YES"
+	matchParentH := "@YES"
+	base := view.SizeW
+	if base == "" {
+		base = widget.SizeW
+	}
+	if base == SizeFill {
+		matchParentW = "@YES"
+	} else {
+		matchParentW = "@NO"
+	}
+	base = view.SizeH
+	if base == "" {
+		base = widget.SizeH
+	}
+	if base == SizeFill {
+		matchParentH = "@YES"
+	} else {
+		matchParentH = "@NO"
+	}
+	buf.add(`@"MatchParentWidth": %s,`, matchParentW)
+	buf.add(`@"MatchParentHeight": %s,`, matchParentH)
+
+	hasSub := 0 < len(view.Sub)
+
+	buf.add(`@"Widget": @"%s",`, widget.Name)
+	if view.Id != "" {
+		buf.add(`@"Id": @"%s",`, view.Id)
+	}
+	if view.Below != "" {
+		buf.add(`@"Below": @"%s",`, view.Below)
+	}
+	if widget.Textable && view.Label != "" {
+		// FIXME view.Label must converted to NSLocalizedString
+		buf.add(`@"Text": @"%s",`, view.Label)
+	}
+	if widget.Orientation != "" {
+		buf.add(`@"Orientation": @"%s",`, widget.Orientation)
+	}
+	if view.Gravity != "" {
+		buf.add(`@"Gravity": @"%s",`, view.Gravity)
+	} else if widget.Gravity != "" {
+		buf.add(`@"Gravity": @"%s",`, widget.Gravity)
+	}
+	if view.Margin != "" {
+		if view.Margin == "normal" {
+			buf.add(`@"Margin": @16,`)
+		} else {
+			buf.add(`@"Margin": @%s`, view.Margin)
+		}
+	}
+	if view.Padding != "" {
+		if view.Padding == "normal" {
+			buf.add(`@"Padding": @16,`)
+		} else {
+			buf.add(`@"Padding": @%s`, view.Padding)
+		}
+	}
+	if hasSub {
+		buf.add(`@"Subviews": @[`)
+		// Print sub views recursively
+		for i, sv := range view.Sub {
+			// append comma if it's not the first child
+			if 0 < i {
+				buf.add(`,`)
+			}
+			genIosLayoutRecur(&sv, false, buf)
+		}
+		buf.add(`]`)
+	}
+	buf.add(`}`)
+}
+
+func genIosViewHelper(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosViewHelperHeader(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, "UIView+Extension.h"))
+	buf = CodeBuffer{}
+	genCodeIosViewHelperImplementation(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, "UIView+Extension.m"))
+}
+
+func genCodeIosViewHelperHeader(mock *Mock, buf *CodeBuffer) {
+	buf.add(`#import <UIKit/UIKit.h>
+
+@interface UIView (Extension)
+
+- (void)createWithViewInfo:(NSDictionary *)viewInfo;
+
+@end
+`)
+}
+
+func genCodeIosViewHelperImplementation(mock *Mock, buf *CodeBuffer) {
+	buf.add(`#import "UIView+Extension.h"
+
+@implementation UIView (Extension)
+
+- (void)createWithViewInfo:(NSDictionary *)viewInfo
+{
+    // Get the max Y from sibling views
+    CGFloat maxY = 0;
+    for (UIView *sibling in self.subviews) {
+        CGFloat y = CGRectGetMaxY(sibling.frame);
+        if (maxY < y) {
+            maxY = y;
+        }
+    }
+
+    CGFloat margin = 0;
+    if ([viewInfo.allKeys containsObject:@"Margin"]) {
+        margin = [[viewInfo objectForKey:@"Margin"] floatValue];
+    }
+    CGFloat padding = 0;
+    // FIXME This is wrong. Padding should be got from parent's viewInfo
+    if ([viewInfo.allKeys containsObject:@"Padding"]) {
+        padding = [[viewInfo objectForKey:@"Padding"] floatValue];
+    }
+
+    NSString *widget = [viewInfo objectForKey:@"Widget"];
+    if ([widget isEqualToString:@"button"]) {
+        // UIButton
+        UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(margin + padding, maxY + margin + padding, self.frame.size.width - (margin + padding) * 2, 100/*FIXME This is temporary */)];
+        [button setTitle:[viewInfo objectForKey:@"Text"] forState:UIControlStateNormal];
+        [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+        // TODO adjust button size with button text
+        [self addSubview:button];
+        return;
+    }
+    if ([widget isEqualToString:@"label"]) {
+        // UILabel
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(margin + padding, maxY + margin + padding, self.frame.size.width - (margin + padding) * 2, 100/*FIXME This is temporary */)];
+        label.text = [viewInfo objectForKey:@"Text"];
+        // TODO adjust label size with label text
+        [self addSubview:label];
+        return;
+    }
+
+    // Determine size with layout_width/layout_height/padding/margin
+    CGFloat width = 0;
+    BOOL matchParentWidth = YES;
+    if ([viewInfo.allKeys containsObject:@"MatchParentWidth"]) {
+        matchParentWidth = [[viewInfo objectForKey:@"MatchParentWidth"] boolValue];
+    }
+    // FIXME Currently, wrap_content is ignored
+    //if (matchParentWidth) {
+    width = self.frame.size.width - margin * 2 - padding * 2;
+    //} else {
+    // Wrap content
+    // TODO Check gravity. Temporarily, it's left
+    //}
+
+    CGFloat height = 0;
+    BOOL matchParentHeight = YES;
+    if ([viewInfo.allKeys containsObject:@"MatchParentHeight"]) {
+        matchParentHeight = [[viewInfo objectForKey:@"MatchParentHeight"] boolValue];
+    }
+    // FIXME Currently, wrap_content is ignored
+    //if (matchParentHeight) {
+    height = self.frame.size.height - margin * 2 - padding * 2;
+    //} else {
+    // Wrap content
+    // TODO Check gravity. Temporarily, it's left
+    //}
+
+    // if ([widget isEqualToString:@"linear"] || [widget isEqualToString:@"relative"]) {
+    // LinearLayout and RelativeLayout
+    // TODO Separate each layout with each appropriate algorithms
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, height)];
+
+    // Process subviews
+    if ([viewInfo.allKeys containsObject:@"Subviews"]) {
+        // TODO Issue: cannot determine subview size with parent size because it's not also determined yet.
+        for (NSDictionary *subviewInfo in [viewInfo objectForKey:@"Subviews"]) {
+            [view createWithViewInfo:subviewInfo];
+        }
+    }
+
+    // Add myself to parent finally
+    [self addSubview:view];
+}
+
+@end`)
 }
 
 func genIosLocalizedStrings(mock *Mock, dir string) {
@@ -542,5 +761,27 @@ func hexToInt(hexString string) (a, r, g, b int) {
 	r = int(bytes[1])
 	g = int(bytes[2])
 	b = int(bytes[3])
+	return
+}
+
+func convertIosLayoutOptions(widget Widget, view *View) (lo LayoutOptions) {
+	base := view.SizeW
+	if base == "" {
+		base = widget.SizeW
+	}
+	if base == SizeFill {
+		lo.Width = "match_parent"
+	} else {
+		lo.Width = "wrap_content"
+	}
+	base = view.SizeH
+	if base == "" {
+		base = widget.SizeH
+	}
+	if base == SizeFill {
+		lo.Height = "match_parent"
+	} else {
+		lo.Height = "wrap_content"
+	}
 	return
 }
