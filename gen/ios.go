@@ -611,10 +611,6 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	buf.add(`/* End PBXBuildFile section */`)
 
 	buf.add(`
-/* Begin PBXContainerItemProxy section */`)
-	buf.add(`/* End PBXContainerItemProxy section */`)
-
-	buf.add(`
 /* Begin PBXFileReference section */`)
 	buf.add(`/* End PBXFileReference section */`)
 
