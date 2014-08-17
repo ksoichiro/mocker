@@ -123,8 +123,8 @@ func (g *IosGenerator) Generate() {
 		wg.Add(1)
 		go func(mock *Mock, dir string, screen Screen) {
 			defer wg.Done()
-			genIosViewController(mock, dir, screen)
-			genIosViewControllerLayout(mock, dir, screen)
+			layoutCodeBuf := genIosViewControllerLayout(mock, dir, screen)
+			genIosViewController(mock, dir, screen, &layoutCodeBuf)
 		}(g.mock, projectDir, screen)
 	}
 
@@ -398,12 +398,12 @@ func genCodeIosAppDelegateImplementation(mock *Mock, buf *CodeBuffer) {
 	)
 }
 
-func genIosViewController(mock *Mock, dir string, screen Screen) {
+func genIosViewController(mock *Mock, dir string, screen Screen, layoutCodeBuf *CodeBuffer) {
 	var buf CodeBuffer
 	genCodeIosViewControllerHeader(mock, screen, &buf)
 	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.ClassPrefix+strings.Title(screen.Id)+"ViewController.h"))
 	buf = CodeBuffer{}
-	genCodeIosViewControllerImplementation(mock, screen, &buf)
+	genCodeIosViewControllerImplementation(mock, screen, &buf, layoutCodeBuf)
 	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.ClassPrefix+strings.Title(screen.Id)+"ViewController.m"))
 }
 
@@ -417,7 +417,7 @@ func genCodeIosViewControllerHeader(mock *Mock, screen Screen, buf *CodeBuffer) 
 		strings.Title(screen.Id))
 }
 
-func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *CodeBuffer) {
+func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *CodeBuffer, layoutCodeBuf *CodeBuffer) {
 	buf.add(`#import "%s%sViewController.h"
 
 @interface %s%sViewController ()
@@ -429,8 +429,18 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-    }
+    if (self) {`,
+		mock.Meta.Ios.ClassPrefix,
+		strings.Title(screen.Id),
+		mock.Meta.Ios.ClassPrefix,
+		strings.Title(screen.Id),
+		mock.Meta.Ios.ClassPrefix,
+		strings.Title(screen.Id))
+
+	// Insert layout codes
+	buf.join(layoutCodeBuf)
+
+	buf.add(`    }
     return self;
 }
 
@@ -439,18 +449,17 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
     [super viewDidLoad];
 }
 
-@end`,
-		mock.Meta.Ios.ClassPrefix,
-		strings.Title(screen.Id),
-		mock.Meta.Ios.ClassPrefix,
-		strings.Title(screen.Id),
-		mock.Meta.Ios.ClassPrefix,
-		strings.Title(screen.Id))
+@end`)
 }
 
-func genIosViewControllerLayout(mock *Mock, dir string, screen Screen) {
+func genIosViewControllerLayout(mock *Mock, dir string, screen Screen) (buf CodeBuffer) {
+	genCodeIosViewControllerLayout(mock, screen, &buf)
+	return
+}
+
+func genCodeIosViewControllerLayout(mock *Mock, screen Screen, buf *CodeBuffer) {
 	// TODO
-	fmt.Println("iOS: Layout generator: Not implemented...")
+	buf.add(`        // TODO Write your layout code here`)
 }
 
 func genIosLocalizedStrings(mock *Mock, dir string) {

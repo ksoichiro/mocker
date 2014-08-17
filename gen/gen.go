@@ -23,6 +23,10 @@ func (b *CodeBuffer) add(format string, a ...interface{}) {
 	*b = append(*b, fmt.Sprintf(format, a...))
 }
 
+func (b *CodeBuffer) join(buf *CodeBuffer) {
+	*b = append(*b, *buf...)
+}
+
 func genFile(buf *CodeBuffer, filename string) {
 	f := createFile(filename)
 	defer f.Close()
