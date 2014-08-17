@@ -230,13 +230,14 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	vcFileRefs := []pbxObject{
 		pbxFileReferences[cp+"AppDelegate.h"],
 		pbxFileReferences[cp+"AppDelegate.m"],
-		pbxFileReferences["Images.xcassets"],
 	}
 	for _, screen := range mock.Screens {
 		vcFileRefs = append(vcFileRefs, pbxFileReferences[cp+strings.Title(screen.Id)+"ViewController.h"])
 		vcFileRefs = append(vcFileRefs, pbxFileReferences[cp+strings.Title(screen.Id)+"ViewController.m"])
 	}
-	vcFileRefs = append(vcFileRefs, pbxGroups["Supporting Files"])
+	vcFileRefs = append(vcFileRefs,
+		pbxFileReferences["Images.xcassets"],
+		pbxGroups["Supporting Files"])
 	pbxGroups[pj] = pbxObject{Name: pj, Id: genIosFileId(&fileId), Path: pj, Children: vcFileRefs}
 	pbxGroups["Frameworks"] = pbxObject{Name: "Frameworks", Id: genIosFileId(&fileId), Children: []pbxObject{
 		pbxFileReferences["Foundation.framework"],
