@@ -574,7 +574,13 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		SourceTree:        "<group>",
 	}
 	// PBXVariantGroup
-	pbxVariantGroups["InfoPlist.strings"] = pbxObject{Name: "InfoPlist.strings", Id: genIosFileId(&fileId)}
+	pbxVariantGroups["InfoPlist.strings"] = pbxObject{
+		Name: "InfoPlist.strings",
+		Id:   genIosFileId(&fileId),
+		Children: []pbxObject{
+			pbxFileReferences["en"],
+		},
+	}
 	// PBXFrameworksBuildPhase
 	pbxFrameworksBuildPhases["Frameworks"] = pbxObject{Name: "Frameworks", Id: genIosFileId(&fileId), Children: []pbxObject{
 		pbxBuildFiles["Foundation.framework"],
@@ -790,7 +796,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	buf.add(`/* End PBXNativeTarget section */`)
 
-	// FIXME PBXProject section
+	// PBXProject section
 	buf.add(`
 /* Begin PBXProject section */`)
 	for _, project := range pbxProjects {
@@ -847,8 +853,27 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 /* Begin PBXTargetDependency section */`)
 	buf.add(`/* End PBXTargetDependency section */`)
 
+	// PBXVariantGroup
 	buf.add(`
 /* Begin PBXVariantGroup section */`)
+	for _, variantGroup := range pbxVariantGroups {
+		buf.add(`		%s /* %s */ = {
+			isa = PBXVariantGroup;
+			children = (`,
+			variantGroup.Id,
+			variantGroup.Name,
+		)
+		for _, child := range variantGroup.Children {
+			buf.add(`				%s /* %s */,`,
+				child.Id,
+				child.Name,
+			)
+		}
+		buf.add(`			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};`)
+	}
 	buf.add(`/* End PBXVariantGroup section */`)
 
 	buf.add(`
