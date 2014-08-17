@@ -391,8 +391,53 @@ func genCodeIosAppDelegateImplementation(mock *Mock, buf *CodeBuffer) {
 }
 
 func genIosViewController(mock *Mock, dir string, screen Screen) {
-	// TODO
-	fmt.Println("iOS: ViewController generator: Not implemented...")
+	var buf CodeBuffer
+	genCodeIosViewControllerHeader(mock, screen, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.ClassPrefix+strings.Title(screen.Id)+"ViewController.h"))
+	buf = CodeBuffer{}
+	genCodeIosViewControllerImplementation(mock, screen, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, mock.Meta.Ios.ClassPrefix+strings.Title(screen.Id)+"ViewController.m"))
+}
+
+func genCodeIosViewControllerHeader(mock *Mock, screen Screen, buf *CodeBuffer) {
+	buf.add(`#import <UIKit/UIKit.h>
+
+@interface %s%sViewController : UIViewController
+
+@end`,
+		mock.Meta.Ios.ClassPrefix,
+		strings.Title(screen.Id))
+}
+
+func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *CodeBuffer) {
+	buf.add(`#import "%s%sViewController.h"
+
+@interface %s%sViewController ()
+
+@end
+
+@implementation %s%sViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+}
+
+@end`,
+		mock.Meta.Ios.ClassPrefix,
+		strings.Title(screen.Id),
+		mock.Meta.Ios.ClassPrefix,
+		strings.Title(screen.Id),
+		mock.Meta.Ios.ClassPrefix,
+		strings.Title(screen.Id))
 }
 
 func genIosViewControllerLayout(mock *Mock, dir string, screen Screen) {
@@ -421,6 +466,7 @@ type pbxObject struct {
 	Id                     string
 	Location               string
 	FileRef                string
+	FileEncoding           string
 	ExplicitFileType       string
 	LastKnownFileType      string
 	IncludeInIndex         string
@@ -534,6 +580,28 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Path:              pj + "-Prefix.pch",
 		SourceTree:        "<group>",
 	}
+	// ViewControllers for each Screens
+	for _, screen := range mock.Screens {
+		hname := cp + strings.Title(screen.Id) + "ViewController.h"
+		pbxFileReferences[hname] = pbxObject{
+			Name:              hname,
+			Id:                genIosFileId(&fileId),
+			FileEncoding:      "4",
+			LastKnownFileType: "sourcecode.c.h",
+			Path:              hname,
+			SourceTree:        "<group>",
+		}
+
+		mname := cp + strings.Title(screen.Id) + "ViewController.m"
+		pbxFileReferences[mname] = pbxObject{
+			Name:              mname,
+			Id:                genIosFileId(&fileId),
+			FileEncoding:      "4",
+			LastKnownFileType: "sourcecode.c.objc",
+			Path:              mname,
+			SourceTree:        "<group>",
+		}
+	}
 	// PBXVariantGroup
 	pbxVariantGroups["InfoPlist.strings"] = pbxObject{
 		Name: "InfoPlist.strings",
@@ -585,6 +653,16 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Location: "Resources",
 		FileRef:  pbxFileReferences["Images.xcassets"].Id,
 	}
+	// ViewControllers for each Screens
+	for _, screen := range mock.Screens {
+		name := cp + strings.Title(screen.Id) + "ViewController.m"
+		pbxBuildFiles[name] = pbxObject{
+			Name:     name,
+			Id:       genIosFileId(&fileId),
+			Location: "Sources",
+			FileRef:  pbxFileReferences[name].Id,
+		}
+	}
 	// PBXFrameworksBuildPhase
 	pbxFrameworksBuildPhases["Frameworks"] = pbxObject{Name: "Frameworks", Id: genIosFileId(&fileId), Children: []pbxObject{
 		pbxBuildFiles["Foundation.framework"],
@@ -598,12 +676,17 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		pbxFileReferences["main.m"],
 		pbxFileReferences[pj+"-Prefix.pch"],
 	}}
-	pbxGroups[pj] = pbxObject{Name: pj, Id: genIosFileId(&fileId), Path: pj, Children: []pbxObject{
+	vcFileRefs := []pbxObject{
 		pbxFileReferences[cp+"AppDelegate.h"],
 		pbxFileReferences[cp+"AppDelegate.m"],
 		pbxFileReferences["Images.xcassets"],
-		pbxGroups["Supporting Files"],
-	}}
+	}
+	for _, screen := range mock.Screens {
+		vcFileRefs = append(vcFileRefs, pbxFileReferences[cp+strings.Title(screen.Id)+"ViewController.h"])
+		vcFileRefs = append(vcFileRefs, pbxFileReferences[cp+strings.Title(screen.Id)+"ViewController.m"])
+	}
+	vcFileRefs = append(vcFileRefs, pbxGroups["Supporting Files"])
+	pbxGroups[pj] = pbxObject{Name: pj, Id: genIosFileId(&fileId), Path: pj, Children: vcFileRefs}
 	pbxGroups["Frameworks"] = pbxObject{Name: "Frameworks", Id: genIosFileId(&fileId), Children: []pbxObject{
 		pbxFileReferences["Foundation.framework"],
 		pbxFileReferences["CoreGraphics.framework"],
@@ -618,13 +701,17 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		pbxGroups["Products"],
 	}}
 	// PBXSourcesBuildPhase
+	vcBuildFiles := []pbxObject{
+		pbxBuildFiles["main.m"],
+	}
+	for _, screen := range mock.Screens {
+		vcBuildFiles = append(vcBuildFiles, pbxBuildFiles[cp+strings.Title(screen.Id)+"ViewController.m"])
+	}
+	vcBuildFiles = append(vcBuildFiles, pbxBuildFiles[cp+"AppDelegate.m"])
 	pbxSourcesBuildPhases["Sources"] = pbxObject{
-		Name: "Sources",
-		Id:   genIosFileId(&fileId),
-		Children: []pbxObject{
-			pbxBuildFiles["main.m"],
-			pbxBuildFiles[cp+"AppDelegate.m"],
-		},
+		Name:     "Sources",
+		Id:       genIosFileId(&fileId),
+		Children: vcBuildFiles,
 	}
 	// PBXResourcesBuildPhase
 	pbxResourcesBuildPhases["Resources"] = pbxObject{
