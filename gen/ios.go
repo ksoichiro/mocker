@@ -432,6 +432,7 @@ type pbxObject struct {
 	ProductRefGroup        string
 	Children               []pbxObject
 	ProductReference       string
+	BuildSettings          string
 }
 
 func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
@@ -447,6 +448,8 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	pbxResourcesBuildPhases := map[string]pbxObject{}
 	pbxSourcesBuildPhases := map[string]pbxObject{}
 	pbxVariantGroups := map[string]pbxObject{}
+	xcProjectBuildConfigurations := map[string]pbxObject{}
+	xcNativeTargetBuildConfigurations := map[string]pbxObject{}
 	xcConfigurationLists := map[string]pbxObject{}
 	// PBXBuildFile
 	pbxBuildFiles["Foundation.framework"] = pbxObject{
@@ -630,6 +633,95 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			pbxBuildFiles["InfoPlist.strings"],
 			pbxBuildFiles["Images.xcassets"],
 		},
+	}
+	// XCConfiguration
+	xcProjectBuildConfigurations["Debug"] = pbxObject{
+		Name: "Debug",
+		Id:   genIosFileId(&fileId),
+		BuildSettings: `				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;`,
+	}
+	xcProjectBuildConfigurations["Release"] = pbxObject{
+		Name: "Release",
+		Id:   genIosFileId(&fileId),
+		BuildSettings: `				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;`,
+	}
+	xcNativeTargetBuildConfigurations["Debug"] = pbxObject{
+		Name: "Debug",
+		Id:   genIosFileId(&fileId),
+		BuildSettings: `				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "MockerDemo/MockerDemo-Prefix.pch";
+				INFOPLIST_FILE = "MockerDemo/MockerDemo-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;`,
+	}
+	xcNativeTargetBuildConfigurations["Release"] = pbxObject{
+		Name: "Release",
+		Id:   genIosFileId(&fileId),
+		BuildSettings: `				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "MockerDemo/MockerDemo-Prefix.pch";
+				INFOPLIST_FILE = "MockerDemo/MockerDemo-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;`,
 	}
 	// XCConfigurationList
 	xcConfigurationLists["PBXProject \""+pj+"\""] = pbxObject{Name: "PBXProject \"" + pj + "\"", Id: genIosFileId(&fileId)}
@@ -926,8 +1018,37 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	buf.add(`/* End PBXVariantGroup section */`)
 
+	// XCBuildConfiguration section
 	buf.add(`
 /* Begin XCBuildConfiguration section */`)
+	for _, xcbc := range xcProjectBuildConfigurations {
+		buf.add(`		%s /* %s */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+%s
+			};
+			name = %s;
+		};`,
+			xcbc.Id,
+			xcbc.Name,
+			xcbc.BuildSettings,
+			xcbc.Name,
+		)
+	}
+	for _, xcbc := range xcNativeTargetBuildConfigurations {
+		buf.add(`		%s /* %s */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+%s
+			};
+			name = %s;
+		};`,
+			xcbc.Id,
+			xcbc.Name,
+			xcbc.BuildSettings,
+			xcbc.Name,
+		)
+	}
 	buf.add(`/* End XCBuildConfiguration section */`)
 
 	buf.add(`
