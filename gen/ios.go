@@ -466,13 +466,12 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
  */
 - (NSDictionary *)viewInfo
 {
-    return `)
+    return`)
 
 	// Insert layout codes
 	buf.join(layoutCodeBuf)
 
-	buf.add(`    ;
-}
+	buf.add(`}
 
 @end`)
 }
@@ -484,11 +483,11 @@ func genIosViewControllerLayout(mock *Mock, dir string, screen Screen) (buf Code
 
 func genCodeIosViewControllerLayout(mock *Mock, screen Screen, buf *CodeBuffer) {
 	if 0 < len(screen.Layout) {
-		genIosLayoutRecur(&screen.Layout[0], true, buf, 2)
+		genIosLayoutRecur(&screen.Layout[0], true, buf, 2, ";")
 	}
 }
 
-func genIosLayoutRecur(view *View, top bool, buf *CodeBuffer, indent int) {
+func genIosLayoutRecur(view *View, top bool, buf *CodeBuffer, indent int, trail string) {
 	if !iwd.Has(view.Type) {
 		return
 	}
@@ -560,15 +559,15 @@ func genIosLayoutRecur(view *View, top bool, buf *CodeBuffer, indent int) {
 		buf.add(tt + `@"Subviews": @[`)
 		// Print sub views recursively
 		for i, sv := range view.Sub {
-			// append comma if it's not the first child
-			if 0 < i {
-				buf.add(`,`)
+			subTrail := ""
+			if i < len(view.Sub)-1 {
+				subTrail = ","
 			}
-			genIosLayoutRecur(&sv, false, buf, indent+2)
+			genIosLayoutRecur(&sv, false, buf, indent+2, subTrail)
 		}
 		buf.add(tt + `]`)
 	}
-	buf.add(t + `}`)
+	buf.add(t + `}` + trail)
 }
 
 func genIosViewHelper(mock *Mock, dir string) {
