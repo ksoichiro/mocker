@@ -451,49 +451,6 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	xcProjectBuildConfigurations := map[string]pbxObject{}
 	xcNativeTargetBuildConfigurations := map[string]pbxObject{}
 	xcConfigurationLists := map[string]pbxObject{}
-	// PBXBuildFile
-	pbxBuildFiles["Foundation.framework"] = pbxObject{
-		Name:     "Foundation.framework",
-		Id:       genIosFileId(&fileId),
-		Location: "Frameworks",
-		FileRef:  genIosFileId(&fileId),
-	}
-	pbxBuildFiles["CoreGraphics.framework"] = pbxObject{
-		Name:     "CoreGraphics.framework",
-		Id:       genIosFileId(&fileId),
-		Location: "Frameworks",
-		FileRef:  genIosFileId(&fileId),
-	}
-	pbxBuildFiles["UIKit.framework"] = pbxObject{
-		Name:     "UIKit.framework",
-		Id:       genIosFileId(&fileId),
-		Location: "Frameworks",
-		FileRef:  genIosFileId(&fileId),
-	}
-	pbxBuildFiles["InfoPlist.strings"] = pbxObject{
-		Name:     "InfoPlist.strings",
-		Id:       genIosFileId(&fileId),
-		Location: "Resources",
-		FileRef:  genIosFileId(&fileId),
-	}
-	pbxBuildFiles["main.m"] = pbxObject{
-		Name:     "main.m",
-		Id:       genIosFileId(&fileId),
-		Location: "Sources",
-		FileRef:  genIosFileId(&fileId),
-	}
-	pbxBuildFiles[cp+"AppDelegate.m"] = pbxObject{
-		Name:     cp + "AppDelegate.m",
-		Id:       genIosFileId(&fileId),
-		Location: "Sources",
-		FileRef:  genIosFileId(&fileId),
-	}
-	pbxBuildFiles["Images.xcassets"] = pbxObject{
-		Name:     "Images.xcassets",
-		Id:       genIosFileId(&fileId),
-		Location: "Resources",
-		FileRef:  genIosFileId(&fileId),
-	}
 	// PBXFileReference
 	pbxFileReferences[pj+".app"] = pbxObject{
 		Name:             pj + ".app",
@@ -505,7 +462,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	pbxFileReferences["Foundation.framework"] = pbxObject{
 		Name:              "Foundation.framework",
-		Id:                pbxBuildFiles["Foundation.framework"].FileRef,
+		Id:                genIosFileId(&fileId),
 		LastKnownFileType: "wrapper.framework",
 		ShowNameInFileRef: true,
 		Path:              "System/Library/Frameworks/Foundation.framework",
@@ -513,7 +470,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	pbxFileReferences["CoreGraphics.framework"] = pbxObject{
 		Name:              "CoreGraphics.framework",
-		Id:                pbxBuildFiles["CoreGraphics.framework"].FileRef,
+		Id:                genIosFileId(&fileId),
 		LastKnownFileType: "wrapper.framework",
 		ShowNameInFileRef: true,
 		Path:              "System/Library/Frameworks/CoreGraphics.framework",
@@ -521,7 +478,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	pbxFileReferences["UIKit.framework"] = pbxObject{
 		Name:              "UIKit.framework",
-		Id:                pbxBuildFiles["UIKit.framework"].FileRef,
+		Id:                genIosFileId(&fileId),
 		LastKnownFileType: "wrapper.framework",
 		ShowNameInFileRef: true,
 		Path:              "System/Library/Frameworks/UIKit.framework",
@@ -536,14 +493,14 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	pbxFileReferences[cp+"AppDelegate.m"] = pbxObject{
 		Name:              cp + "AppDelegate.m",
-		Id:                pbxBuildFiles[cp+"AppDelegate.m"].FileRef,
+		Id:                genIosFileId(&fileId),
 		LastKnownFileType: "sourcecode.c.objc",
 		Path:              cp + "AppDelegate.m",
 		SourceTree:        "<group>",
 	}
 	pbxFileReferences["Images.xcassets"] = pbxObject{
 		Name:              "Images.xcassets",
-		Id:                pbxBuildFiles["Images.xcassets"].FileRef,
+		Id:                genIosFileId(&fileId),
 		LastKnownFileType: "folder.assetcatalog",
 		Path:              "Images.xcassets",
 		SourceTree:        "<group>",
@@ -584,6 +541,49 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Children: []pbxObject{
 			pbxFileReferences["en"],
 		},
+	}
+	// PBXBuildFile
+	pbxBuildFiles["Foundation.framework"] = pbxObject{
+		Name:     "Foundation.framework",
+		Id:       genIosFileId(&fileId),
+		Location: "Frameworks",
+		FileRef:  pbxFileReferences["Foundation.framework"].Id,
+	}
+	pbxBuildFiles["CoreGraphics.framework"] = pbxObject{
+		Name:     "CoreGraphics.framework",
+		Id:       genIosFileId(&fileId),
+		Location: "Frameworks",
+		FileRef:  pbxFileReferences["CoreGraphics.framework"].Id,
+	}
+	pbxBuildFiles["UIKit.framework"] = pbxObject{
+		Name:     "UIKit.framework",
+		Id:       genIosFileId(&fileId),
+		Location: "Frameworks",
+		FileRef:  pbxFileReferences["UIKit.framework"].Id,
+	}
+	pbxBuildFiles["InfoPlist.strings"] = pbxObject{
+		Name:     "InfoPlist.strings",
+		Id:       genIosFileId(&fileId),
+		Location: "Resources",
+		FileRef:  pbxVariantGroups["InfoPlist.strings"].Id,
+	}
+	pbxBuildFiles["main.m"] = pbxObject{
+		Name:     "main.m",
+		Id:       genIosFileId(&fileId),
+		Location: "Sources",
+		FileRef:  pbxFileReferences["main.m"].Id,
+	}
+	pbxBuildFiles[cp+"AppDelegate.m"] = pbxObject{
+		Name:     cp + "AppDelegate.m",
+		Id:       genIosFileId(&fileId),
+		Location: "Sources",
+		FileRef:  pbxFileReferences[cp+"AppDelegate.m"].Id,
+	}
+	pbxBuildFiles["Images.xcassets"] = pbxObject{
+		Name:     "Images.xcassets",
+		Id:       genIosFileId(&fileId),
+		Location: "Resources",
+		FileRef:  pbxFileReferences["Images.xcassets"].Id,
 	}
 	// PBXFrameworksBuildPhase
 	pbxFrameworksBuildPhases["Frameworks"] = pbxObject{Name: "Frameworks", Id: genIosFileId(&fileId), Children: []pbxObject{
