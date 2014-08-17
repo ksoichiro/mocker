@@ -484,17 +484,19 @@ func genIosViewControllerLayout(mock *Mock, dir string, screen Screen) (buf Code
 
 func genCodeIosViewControllerLayout(mock *Mock, screen Screen, buf *CodeBuffer) {
 	if 0 < len(screen.Layout) {
-		genIosLayoutRecur(&screen.Layout[0], true, buf)
+		genIosLayoutRecur(&screen.Layout[0], true, buf, 2)
 	}
 }
 
-func genIosLayoutRecur(view *View, top bool, buf *CodeBuffer) {
+func genIosLayoutRecur(view *View, top bool, buf *CodeBuffer, indent int) {
 	if !iwd.Has(view.Type) {
 		return
 	}
 	widget := iwd.Get(view.Type)
 
-	buf.add(`@{`)
+	t := tab(indent)
+	tt := tab(indent + 1)
+	buf.add(t + `@{`)
 
 	matchParentW := "@YES"
 	matchParentH := "@YES"
@@ -516,57 +518,57 @@ func genIosLayoutRecur(view *View, top bool, buf *CodeBuffer) {
 	} else {
 		matchParentH = "@NO"
 	}
-	buf.add(`@"MatchParentWidth": %s,`, matchParentW)
-	buf.add(`@"MatchParentHeight": %s,`, matchParentH)
+	buf.add(tt+`@"MatchParentWidth": %s,`, matchParentW)
+	buf.add(tt+`@"MatchParentHeight": %s,`, matchParentH)
 
 	hasSub := 0 < len(view.Sub)
 
-	buf.add(`@"Widget": @"%s",`, widget.Name)
+	buf.add(tt+`@"Widget": @"%s",`, widget.Name)
 	if view.Id != "" {
-		buf.add(`@"Id": @"%s",`, view.Id)
+		buf.add(tt+`@"Id": @"%s",`, view.Id)
 	}
 	if view.Below != "" {
-		buf.add(`@"Below": @"%s",`, view.Below)
+		buf.add(tt+`@"Below": @"%s",`, view.Below)
 	}
 	if widget.Textable && view.Label != "" {
 		// FIXME view.Label must converted to NSLocalizedString
-		buf.add(`@"Text": @"%s",`, view.Label)
+		buf.add(tt+`@"Text": @"%s",`, view.Label)
 	}
 	if widget.Orientation != "" {
-		buf.add(`@"Orientation": @"%s",`, widget.Orientation)
+		buf.add(tt+`@"Orientation": @"%s",`, widget.Orientation)
 	}
 	if view.Gravity != "" {
-		buf.add(`@"Gravity": @"%s",`, view.Gravity)
+		buf.add(tt+`@"Gravity": @"%s",`, view.Gravity)
 	} else if widget.Gravity != "" {
-		buf.add(`@"Gravity": @"%s",`, widget.Gravity)
+		buf.add(tt+`@"Gravity": @"%s",`, widget.Gravity)
 	}
 	if view.Margin != "" {
 		if view.Margin == "normal" {
-			buf.add(`@"Margin": @16,`)
+			buf.add(tt + `@"Margin": @16,`)
 		} else {
-			buf.add(`@"Margin": @%s`, view.Margin)
+			buf.add(tt+`@"Margin": @%s`, view.Margin)
 		}
 	}
 	if view.Padding != "" {
 		if view.Padding == "normal" {
-			buf.add(`@"Padding": @16,`)
+			buf.add(tt + `@"Padding": @16,`)
 		} else {
-			buf.add(`@"Padding": @%s`, view.Padding)
+			buf.add(tt+`@"Padding": @%s`, view.Padding)
 		}
 	}
 	if hasSub {
-		buf.add(`@"Subviews": @[`)
+		buf.add(tt + `@"Subviews": @[`)
 		// Print sub views recursively
 		for i, sv := range view.Sub {
 			// append comma if it's not the first child
 			if 0 < i {
 				buf.add(`,`)
 			}
-			genIosLayoutRecur(&sv, false, buf)
+			genIosLayoutRecur(&sv, false, buf, indent+2)
 		}
-		buf.add(`]`)
+		buf.add(tt + `]`)
 	}
-	buf.add(`}`)
+	buf.add(t + `}`)
 }
 
 func genIosViewHelper(mock *Mock, dir string) {
@@ -784,4 +786,12 @@ func convertIosLayoutOptions(widget Widget, view *View) (lo LayoutOptions) {
 		lo.Height = "wrap_content"
 	}
 	return
+}
+
+func tab(level int) string {
+	s := ""
+	for i := 0; i < level; i++ {
+		s += "    "
+	}
+	return s
 }
