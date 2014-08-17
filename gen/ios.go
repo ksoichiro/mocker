@@ -2,7 +2,6 @@ package gen
 
 import (
 	"encoding/hex"
-	"fmt"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -139,7 +138,7 @@ func (g *IosGenerator) Generate() {
 	wg.Add(1)
 	go func(mock *Mock, dir string) {
 		defer wg.Done()
-		genIosLocalizedStrings(mock, dir)
+		genIosLocalizableStrings(mock, dir)
 	}(g.mock, projectDir)
 	wg.Add(1)
 	go func(mock *Mock, dir string) {
@@ -683,9 +682,14 @@ func genCodeIosViewHelperImplementation(mock *Mock, buf *CodeBuffer) {
 @end`)
 }
 
-func genIosLocalizedStrings(mock *Mock, dir string) {
-	// TODO
-	fmt.Println("iOS: LocalizedString generator: Not implemented...")
+func genIosLocalizableStrings(mock *Mock, dir string) {
+	var buf CodeBuffer
+	genCodeIosLocalizableStrings(mock, &buf)
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, "Base.lproj", "Localizable.strings"))
+	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, "ja.lproj", "Localizable.strings"))
+}
+
+func genCodeIosLocalizableStrings(mock *Mock, buf *CodeBuffer) {
 }
 
 func genIosColors(mock *Mock, dir string) {

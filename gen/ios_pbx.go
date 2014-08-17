@@ -125,6 +125,22 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Path:              "ja.lproj/InfoPlist.strings",
 		SourceTree:        "<group>",
 	}
+	pbxFileReferences["Base|Localizable.strings"] = pbxObject{
+		Name:              "Base",
+		Id:                genIosFileId(&fileId),
+		LastKnownFileType: "text.plist.strings",
+		ShowNameInFileRef: true,
+		Path:              "Base.lproj/Localizable.strings",
+		SourceTree:        "<group>",
+	}
+	pbxFileReferences["ja|Localizable.strings"] = pbxObject{
+		Name:              "ja",
+		Id:                genIosFileId(&fileId),
+		LastKnownFileType: "text.plist.strings",
+		ShowNameInFileRef: true,
+		Path:              "ja.lproj/Localizable.strings",
+		SourceTree:        "<group>",
+	}
 	pbxFileReferences["main.m"] = pbxObject{
 		Name:              "main.m",
 		Id:                genIosFileId(&fileId),
@@ -203,6 +219,14 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			pbxFileReferences["ja|InfoPlist.strings"],
 		},
 	}
+	pbxVariantGroups["Localizable.strings"] = pbxObject{
+		Name: "Localizable.strings",
+		Id:   genIosFileId(&fileId),
+		Children: []pbxObject{
+			pbxFileReferences["Base|Localizable.strings"],
+			pbxFileReferences["ja|Localizable.strings"],
+		},
+	}
 	// PBXBuildFile
 	pbxBuildFiles["Foundation.framework"] = pbxObject{
 		Name:     "Foundation.framework",
@@ -227,6 +251,12 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Id:       genIosFileId(&fileId),
 		Location: "Resources",
 		FileRef:  pbxVariantGroups["InfoPlist.strings"].Id,
+	}
+	pbxBuildFiles["Localizable.strings"] = pbxObject{
+		Name:     "Localizable.strings",
+		Id:       genIosFileId(&fileId),
+		Location: "Resources",
+		FileRef:  pbxVariantGroups["Localizable.strings"].Id,
 	}
 	pbxBuildFiles["main.m"] = pbxObject{
 		Name:     "main.m",
@@ -279,6 +309,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	pbxGroups["Supporting Files"] = pbxObject{Name: "Supporting Files", Id: genIosFileId(&fileId), Children: []pbxObject{
 		pbxFileReferences[pj+"-Info.plist"],
 		pbxVariantGroups["InfoPlist.strings"],
+		pbxVariantGroups["Localizable.strings"],
 		pbxFileReferences["main.m"],
 		pbxFileReferences[pj+"-Prefix.pch"],
 	}}
@@ -332,6 +363,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Id:   genIosFileId(&fileId),
 		Children: []pbxObject{
 			pbxBuildFiles["InfoPlist.strings"],
+			pbxBuildFiles["Localizable.strings"],
 			pbxBuildFiles["Images.xcassets"],
 		},
 	}
@@ -726,9 +758,9 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			)
 		}
 		buf.add(`			);
-			name = InfoPlist.strings;
+			name = %s;
 			sourceTree = "<group>";
-		};`)
+		};`, variantGroup.Name)
 	}
 	buf.add(`/* End PBXVariantGroup section */`)
 
