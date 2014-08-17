@@ -423,6 +423,8 @@ type pbxObject struct {
 	FileRef           string
 	ExplicitFileType  string
 	LastKnownFileType string
+	IncludeInIndex    string
+	ShowNameInFileRef bool
 	Path              string
 	SourceTree        string
 	Children          []pbxObject
@@ -481,11 +483,19 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		FileRef:  genIosFileId(&fileId),
 	}
 	// PBXFileReference
-	pbxFileReferences[pj+".app"] = pbxObject{Name: pj + ".app", Id: genIosFileId(&fileId)}
+	pbxFileReferences[pj+".app"] = pbxObject{
+		Name:             pj + ".app",
+		Id:               genIosFileId(&fileId),
+		ExplicitFileType: "wrapper.framework",
+		IncludeInIndex:   "0",
+		Path:             pj + ".app",
+		SourceTree:       "BUILT_PRODUCTS_DIR",
+	}
 	pbxFileReferences["Foundation.framework"] = pbxObject{
 		Name:              "Foundation.framework",
 		Id:                pbxBuildFiles["Foundation.framework"].FileRef,
 		LastKnownFileType: "wrapper.framework",
+		ShowNameInFileRef: true,
 		Path:              "System/Library/Frameworks/Foundation.framework",
 		SourceTree:        "SDKROOT",
 	}
@@ -493,6 +503,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Name:              "CoreGraphics.framework",
 		Id:                pbxBuildFiles["CoreGraphics.framework"].FileRef,
 		LastKnownFileType: "wrapper.framework",
+		ShowNameInFileRef: true,
 		Path:              "System/Library/Frameworks/CoreGraphics.framework",
 		SourceTree:        "SDKROOT",
 	}
@@ -500,6 +511,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Name:              "UIKit.framework",
 		Id:                pbxBuildFiles["UIKit.framework"].FileRef,
 		LastKnownFileType: "wrapper.framework",
+		ShowNameInFileRef: true,
 		Path:              "System/Library/Frameworks/UIKit.framework",
 		SourceTree:        "SDKROOT",
 	}
@@ -529,6 +541,13 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Id:                genIosFileId(&fileId),
 		LastKnownFileType: "text.plist.xml",
 		Path:              pj + "-Info.plist",
+		SourceTree:        "<group>",
+	}
+	pbxFileReferences["en"] = pbxObject{
+		Name:              "en",
+		Id:                genIosFileId(&fileId),
+		LastKnownFileType: "text.plist.strings",
+		Path:              "en.lproj/InfoPlist.strings",
 		SourceTree:        "<group>",
 	}
 	pbxFileReferences["main.m"] = pbxObject{
@@ -610,8 +629,37 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	buf.add(`/* End PBXBuildFile section */`)
 
+	// PBXFileReference section
 	buf.add(`
 /* Begin PBXFileReference section */`)
+	for _, fileRef := range pbxFileReferences {
+		s := fmt.Sprintf(`		%s /* %s */ = {isa = PBXFileReference;`,
+			fileRef.Id,
+			fileRef.Name,
+		)
+		if fileRef.ExplicitFileType != "" {
+			s += fmt.Sprintf(` explicitFileType = %s;`, fileRef.ExplicitFileType)
+		} else if fileRef.LastKnownFileType != "" {
+			s += fmt.Sprintf(` lastKnownFileType = %s;`, fileRef.LastKnownFileType)
+		}
+		if fileRef.IncludeInIndex != "" {
+			s += fmt.Sprintf(` includeInIndex = %s;`, fileRef.IncludeInIndex)
+		}
+		if fileRef.ShowNameInFileRef {
+			s += fmt.Sprintf(` name = %s;`, fileRef.Name)
+		}
+		path := fileRef.Path
+		if strings.Contains(path, "-") {
+			path = "\"" + path + "\""
+		}
+		s += fmt.Sprintf(` path = %s;`, fileRef.Path)
+		sourceTree := fileRef.SourceTree
+		if strings.Contains(sourceTree, "<") {
+			sourceTree = "\"" + sourceTree + "\""
+		}
+		s += fmt.Sprintf(` sourceTree = %s; };`, sourceTree)
+		buf.add(s)
+	}
 	buf.add(`/* End PBXFileReference section */`)
 
 	// PBXFrameworksBuildPhase section
