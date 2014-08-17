@@ -417,17 +417,19 @@ func genIosProjectPbxproj(mock *Mock, dir string) {
 }
 
 type pbxObject struct {
-	Name              string
-	Id                string
-	Location          string
-	FileRef           string
-	ExplicitFileType  string
-	LastKnownFileType string
-	IncludeInIndex    string
-	ShowNameInFileRef bool
-	Path              string
-	SourceTree        string
-	Children          []pbxObject
+	Name                   string
+	Id                     string
+	Location               string
+	FileRef                string
+	ExplicitFileType       string
+	LastKnownFileType      string
+	IncludeInIndex         string
+	ShowNameInFileRef      bool
+	Path                   string
+	SourceTree             string
+	BuildConfigurationList string
+	Children               []pbxObject
+	ProductReference       string
 }
 
 func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
@@ -438,7 +440,11 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	pbxFileReferences := map[string]pbxObject{}
 	pbxFrameworksBuildPhases := map[string]pbxObject{}
 	pbxGroups := map[string]pbxObject{}
-	pbxVariantGroup := map[string]pbxObject{}
+	pbxNativeTargets := map[string]pbxObject{}
+	pbxResourcesBuildPhases := map[string]pbxObject{}
+	pbxSourcesBuildPhases := map[string]pbxObject{}
+	pbxVariantGroups := map[string]pbxObject{}
+	xcConfigurationLists := map[string]pbxObject{}
 	// PBXBuildFile
 	pbxBuildFiles["Foundation.framework"] = pbxObject{
 		Name:     "Foundation.framework",
@@ -565,7 +571,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		SourceTree:        "<group>",
 	}
 	// PBXVariantGroup
-	pbxVariantGroup["InfoPlist.strings"] = pbxObject{Name: "InfoPlist.strings", Id: genIosFileId(&fileId)}
+	pbxVariantGroups["InfoPlist.strings"] = pbxObject{Name: "InfoPlist.strings", Id: genIosFileId(&fileId)}
 	// PBXFrameworksBuildPhase
 	pbxFrameworksBuildPhases["Frameworks"] = pbxObject{Name: "Frameworks", Id: genIosFileId(&fileId), Children: []pbxObject{
 		pbxBuildFiles["Foundation.framework"],
@@ -575,7 +581,7 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	// PBXGroup
 	pbxGroups["Supporting Files"] = pbxObject{Name: "Supporting Files", Id: genIosFileId(&fileId), Children: []pbxObject{
 		pbxFileReferences[pj+"-Info.plist"],
-		pbxVariantGroup["InfoPlist.strings"],
+		pbxVariantGroups["InfoPlist.strings"],
 		pbxFileReferences["main.m"],
 		pbxFileReferences[pj+"-Prefix.pch"],
 	}}
@@ -598,6 +604,24 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		pbxGroups["Frameworks"],
 		pbxGroups["Products"],
 	}}
+	// PBXSourcesBuildPhase
+	pbxSourcesBuildPhases["Sources"] = pbxObject{Name: "Sources", Id: genIosFileId(&fileId)}
+	// PBXResourcesBuildPhase
+	pbxResourcesBuildPhases["Resources"] = pbxObject{Name: "Resources", Id: genIosFileId(&fileId)}
+	// XCConfigurationList
+	xcConfigurationLists["PBXProject \""+pj+"\""] = pbxObject{Name: "PBXProject \"" + pj + "\"", Id: genIosFileId(&fileId)}
+	xcConfigurationLists["PBXNativeTarget \""+pj+"\""] = pbxObject{Name: "PBXNativeTarget \"" + pj + "\"", Id: genIosFileId(&fileId)}
+	// PBXNativeTarget
+	pbxNativeTargets[pj] = pbxObject{
+		Name: pj,
+		BuildConfigurationList: "PBXNativeTarget \"" + pj + "\"",
+		Children: []pbxObject{
+			pbxSourcesBuildPhases["Sources"],
+			pbxFrameworksBuildPhases["Frameworks"],
+			pbxResourcesBuildPhases["Resources"],
+		},
+		ProductReference: pj + ".app",
+	}
 
 	// Header
 	buf.add(`// !$*UTF8*$!
@@ -714,8 +738,41 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	}
 	buf.add(`/* End PBXGroup section */`)
 
+	// PBXNativetarget section
 	buf.add(`
 /* Begin PBXNativeTarget section */`)
+	for _, nativeTarget := range pbxNativeTargets {
+		buf.add(`		%s /* %s */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = %s /* Build configuration list for %s */;
+			buildPhases = (`,
+			nativeTarget.Id,
+			nativeTarget.Name,
+			xcConfigurationLists[nativeTarget.BuildConfigurationList].Id,
+			xcConfigurationLists[nativeTarget.BuildConfigurationList].Name,
+		)
+		for _, child := range nativeTarget.Children {
+			buf.add(`				%s /* %s */,`,
+				child.Id,
+				child.Name,
+			)
+		}
+		buf.add(`			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = %s;
+			productName = %s;
+			productReference = %s /* %s */;
+			productType = "com.apple.product-type.application";
+		};`,
+			nativeTarget.Name,
+			nativeTarget.Name,
+			pbxFileReferences[nativeTarget.ProductReference].Id,
+			pbxFileReferences[nativeTarget.ProductReference].Name,
+		)
+	}
 	buf.add(`/* End PBXNativeTarget section */`)
 
 	buf.add(`
