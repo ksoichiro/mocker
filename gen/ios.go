@@ -3,6 +3,7 @@ package gen
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -638,76 +639,35 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 	// PBXGroup section
 	buf.add(`
 /* Begin PBXGroup section */`)
-	// mainGroup
-	buf.add(`		%s = {
+	for _, group := range pbxGroups {
+		groupComment := ""
+		if group.Name != "" {
+			groupComment = "/* " + group.Name + " */ "
+		}
+		buf.add(`		%s %s= {
 			isa = PBXGroup;
 			children = (`,
-		pbxGroups["mainGroup"].Id)
-	for _, child := range pbxGroups["mainGroup"].Children {
-		buf.add(`				%s /* %s */,`,
-			child.Id,
-			child.Name)
-	}
-	buf.add(`			sourceTree = "<group>";
+			group.Id,
+			groupComment)
+		for _, child := range group.Children {
+			buf.add(`				%s /* %s */,`,
+				child.Id,
+				child.Name)
+		}
+		buf.add(`			);`)
+
+		if group.Path != "" {
+			buf.add(`			path = %s;`, group.Path)
+		} else if group.Name != "" {
+			name := group.Name
+			if strings.Contains(name, " ") {
+				name = "\"" + name + "\""
+			}
+			buf.add(`			name = %s;`, name)
+		}
+		buf.add(`			sourceTree = "<group>";
 		};`)
-	// Products
-	buf.add(`		%s /* Products */ = {
-			isa = PBXGroup;
-			children = (`,
-		pbxGroups["Products"].Id)
-	for _, child := range pbxGroups["Products"].Children {
-		buf.add(`				%s /* %s */,`,
-			child.Id,
-			child.Name)
 	}
-	buf.add(`			);
-			name = Products;
-			sourceTree = "<group>";
-		};`)
-	// Frameworks
-	buf.add(`		%s /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (`,
-		pbxGroups["Frameworks"].Id)
-	for _, child := range pbxGroups["Frameworks"].Children {
-		buf.add(`				%s /* %s */,`,
-			child.Id,
-			child.Name)
-	}
-	buf.add(`			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};`)
-	// pj
-	buf.add(`		%s /* %s */ = {
-			isa = PBXGroup;
-			children = (`,
-		pbxGroups[pj].Id,
-		pbxGroups[pj].Name)
-	for _, child := range pbxGroups[pj].Children {
-		buf.add(`				%s /* %s */,`,
-			child.Id,
-			child.Name)
-	}
-	buf.add(`			);
-			path = %s;
-			sourceTree = "<group>";
-		};`, pbxGroups[pj].Path)
-	// Supporting Files
-	buf.add(`		%s /* %s */ = {
-			isa = PBXGroup;
-			children = (`,
-		pbxGroups["Supporting Files"].Id,
-		pbxGroups["Supporting Files"].Name)
-	for _, child := range pbxGroups["Supporting Files"].Children {
-		buf.add(`				%s /* %s */,`,
-			child.Id,
-			child.Name)
-	}
-	buf.add(`			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};`)
 	buf.add(`/* End PBXGroup section */`)
 
 	buf.add(`
