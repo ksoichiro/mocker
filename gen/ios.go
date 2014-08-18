@@ -473,13 +473,39 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
     if (self) {
         UIView *root = [[UIView alloc] initWithFrame:CGRectMake(0, 44/*FIXME*/, self.view.frame.size.width, self.view.frame.size.height)];
         [self.view addSubview:root];
-        [root createWithViewInfo:[self viewInfo]];`,
+        NSMutableDictionary *views = [NSMutableDictionary new];
+        [root createWithViewInfo:[self viewInfo] views:views];`,
 		mock.Meta.Ios.ClassPrefix,
 		strings.Title(screen.Id),
 		mock.Meta.Ios.ClassPrefix,
 		strings.Title(screen.Id),
 		mock.Meta.Ios.ClassPrefix,
 		strings.Title(screen.Id))
+
+	if 0 < len(screen.Layout) {
+		views := []View{}
+		genCodeIosAggregateWidgets(&screen.Layout[0], &views)
+		for _, view := range views {
+			switch view.Type {
+			case "button":
+				buf.add(`
+        if ([views.allKeys containsObject:@"%s"]) {
+            self.%s = (UIButton *) [views objectForKey:@"%s"];
+            [self.%s addTarget:self action:@selector(didPush%s) forControlEvents:UIControlEventTouchUpInside];
+        }`, view.Id, view.Id, view.Id, view.Id, strings.Title(view.Id))
+			case "label":
+				buf.add(`
+        if ([views.allKeys containsObject:@"%s"]) {
+            self.%s = (UILabel *) [views objectForKey:@"%s"];
+        }`, view.Id, view.Id, view.Id)
+			default:
+				buf.add(`
+        if ([views.allKeys containsObject:@"%s"]) {
+            self.%s = (UIView *) [views objectForKey:@"%s"];
+        }`, view.Id, view.Id, view.Id)
+			}
+		}
+	}
 
 	buf.add(`    }
     return self;
@@ -616,7 +642,7 @@ func genCodeIosViewHelperHeader(mock *Mock, buf *CodeBuffer) {
 
 @interface UIView (Extension)
 
-- (void)createWithViewInfo:(NSDictionary *)viewInfo;
+- (void)createWithViewInfo:(NSDictionary *)viewInfo views:(NSMutableDictionary *)views;
 
 @end
 `)
@@ -627,7 +653,7 @@ func genCodeIosViewHelperImplementation(mock *Mock, buf *CodeBuffer) {
 
 @implementation UIView (Extension)
 
-- (void)createWithViewInfo:(NSDictionary *)viewInfo
+- (void)createWithViewInfo:(NSDictionary *)viewInfo views:(NSMutableDictionary *)views
 {
     // Get the max Y from sibling views
     CGFloat maxY = 0;
@@ -655,6 +681,9 @@ func genCodeIosViewHelperImplementation(mock *Mock, buf *CodeBuffer) {
         [button setTitle:NSLocalizedString([viewInfo objectForKey:@"Text"], nil) forState:UIControlStateNormal];
         [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         // TODO adjust button size with button text
+        if ([viewInfo.allKeys containsObject:@"Id"]) {
+            [views setObject:button forKey:[viewInfo objectForKey:@"Id"]];
+        }
         [self addSubview:button];
         return;
     }
@@ -664,6 +693,9 @@ func genCodeIosViewHelperImplementation(mock *Mock, buf *CodeBuffer) {
         label.text = NSLocalizedString([viewInfo objectForKey:@"Text"], nil);
         // TODO adjust label size with label text
         [self addSubview:label];
+        if ([viewInfo.allKeys containsObject:@"Id"]) {
+            [views setObject:label forKey:[viewInfo objectForKey:@"Id"]];
+        }
         return;
     }
 
@@ -698,12 +730,15 @@ func genCodeIosViewHelperImplementation(mock *Mock, buf *CodeBuffer) {
     // LinearLayout and RelativeLayout
     // TODO Separate each layout with each appropriate algorithms
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, height)];
+    if ([viewInfo.allKeys containsObject:@"Id"]) {
+        [views setObject:view forKey:[viewInfo objectForKey:@"Id"]];
+    }
 
     // Process subviews
     if ([viewInfo.allKeys containsObject:@"Subviews"]) {
         // TODO Issue: cannot determine subview size with parent size because it's not also determined yet.
         for (NSDictionary *subviewInfo in [viewInfo objectForKey:@"Subviews"]) {
-            [view createWithViewInfo:subviewInfo];
+            [view createWithViewInfo:subviewInfo views:views];
         }
     }
 
