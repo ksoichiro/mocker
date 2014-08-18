@@ -315,16 +315,17 @@ func genCodeAndroidActivityLayout(mock *Mock, screen Screen, buf *CodeBuffer) {
 	buf.add(`<?xml version="1.0" encoding="utf-8"?>`)
 	if 0 < len(screen.Layout) {
 		// Only parse root view
-		genAndroidLayoutRecur(&screen.Layout[0], true, buf)
+		genAndroidLayoutRecur(&screen.Layout[0], true, buf, 0)
 	}
 }
 
-func genAndroidLayoutRecur(view *View, top bool, buf *CodeBuffer) {
+func genAndroidLayoutRecur(view *View, top bool, buf *CodeBuffer, indent int) {
 	if !awd.Has(view.Type) {
 		return
 	}
 	widget := awd.Get(view.Type)
 
+	t := tab(indent)
 	xmlns := ""
 	if top {
 		xmlns = ` xmlns:android="http://schemas.android.com/apk/res/android"`
@@ -333,18 +334,18 @@ func genAndroidLayoutRecur(view *View, top bool, buf *CodeBuffer) {
 	lo := convertAndroidLayoutOptions(widget, view)
 	hasSub := 0 < len(view.Sub)
 
-	buf.add(`<%s%s`, widget.Name, xmlns)
+	buf.add(t+`<%s%s`, widget.Name, xmlns)
 	if view.Id != "" {
-		buf.add(`    android:id="@+id/%s"`, view.Id)
+		buf.add(t+`    android:id="@+id/%s"`, view.Id)
 	}
 	if view.Below != "" {
-		buf.add(`    android:layout_below="@id/%s"`, view.Below)
+		buf.add(t+`    android:layout_below="@id/%s"`, view.Below)
 	}
 	if widget.Textable && view.Label != "" {
-		buf.add(`    android:text="@string/%s"`, view.Label)
+		buf.add(t+`    android:text="@string/%s"`, view.Label)
 	}
 	if widget.Orientation != "" {
-		buf.add(`    android:orientation="%s"`, widget.Orientation)
+		buf.add(t+`    android:orientation="%s"`, widget.Orientation)
 	}
 	if view.Gravity != "" {
 		gravity := ""
@@ -354,38 +355,39 @@ func genAndroidLayoutRecur(view *View, top bool, buf *CodeBuffer) {
 		case GravityCenterV:
 			gravity = "center_vertical"
 		}
-		buf.add(`    android:gravity="%s"`, gravity)
+		buf.add(t+`    android:gravity="%s"`, gravity)
 	} else if widget.Gravity != "" {
-		buf.add(`    android:gravity="%s"`, widget.Gravity)
+		buf.add(t+`    android:gravity="%s"`, widget.Gravity)
 	}
 	if view.Margin != "" {
 		if view.Margin == "normal" {
-			buf.add(`    android:layout_margin="%s"`, "@dimen/default_margin")
+			buf.add(t+`    android:layout_margin="%s"`, "@dimen/default_margin")
 		} else {
-			buf.add(`    android:layout_margin="%s"`, view.Margin)
+			buf.add(t+`    android:layout_margin="%s"`, view.Margin)
 		}
 	}
 	if view.Padding != "" {
 		if view.Padding == "normal" {
-			buf.add(`    android:padding="%s"`, "@dimen/default_padding")
+			buf.add(t+`    android:padding="%s"`, "@dimen/default_padding")
 		} else {
-			buf.add(`    android:padding="%s"`, view.Padding)
+			buf.add(t+`    android:padding="%s"`, view.Padding)
 		}
 	}
-	buf.add(`    android:layout_width="%s"
-    android:layout_height="%s"`,
+	buf.add(t+`    android:layout_width="%s"
+%s    android:layout_height="%s"`,
 		lo.Width,
+		t,
 		lo.Height)
 
 	if hasSub {
 		// Print sub views recursively
 		buf.add(`    >`)
 		for _, sv := range view.Sub {
-			genAndroidLayoutRecur(&sv, false, buf)
+			genAndroidLayoutRecur(&sv, false, buf, indent+1)
 		}
-		buf.add(`</%s>`, widget.Name)
+		buf.add(t+`</%s>`, widget.Name)
 	} else {
-		buf.add(`    />`)
+		buf.add(t + `    />`)
 	}
 }
 

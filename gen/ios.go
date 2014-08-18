@@ -931,11 +931,3 @@ func convertIosLayoutOptions(widget Widget, view *View) (lo LayoutOptions) {
 	}
 	return
 }
-
-func tab(level int) string {
-	s := ""
-	for i := 0; i < level; i++ {
-		s += "    "
-	}
-	return s
-}

@@ -35,3 +35,11 @@ func genFile(buf *CodeBuffer, filename string) {
 	}
 	f.Close()
 }
+
+func tab(level int) string {
+	s := ""
+	for i := 0; i < level; i++ {
+		s += "    "
+	}
+	return s
+}
