@@ -540,6 +540,11 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
     [super viewDidLoad];
 }`)
 
+	if 0 < len(views) {
+		buf.add(`
+#pragma mark - Widget event handlers`)
+	}
+
 	for _, view := range views {
 		if view.Type == "button" {
 			buf.add(`
