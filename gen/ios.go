@@ -418,10 +418,43 @@ func genCodeIosViewControllerHeader(mock *Mock, screen Screen, buf *CodeBuffer) 
 	buf.add(`#import <UIKit/UIKit.h>
 
 @interface %s%sViewController : UIViewController
-
-@end`,
+`,
 		mock.Meta.Ios.ClassPrefix,
 		strings.Title(screen.Id))
+
+	if 0 < len(screen.Layout) {
+		views := []View{}
+		genCodeIosAggregateWidgets(&screen.Layout[0], &views)
+		for _, view := range views {
+			widgetName := "UIView *"
+			switch view.Type {
+			case "button":
+				widgetName = "UIButton *"
+			case "label":
+				widgetName = "UILabel *"
+			}
+			buf.add(`@property %s%s;`,
+				widgetName,
+				view.Id,
+			)
+		}
+	}
+
+	buf.add(`
+@end`)
+}
+
+func genCodeIosAggregateWidgets(current *View, views *[]View) {
+	if current != nil && iwd.Has((*current).Type) {
+		if (*current).Id != "" {
+			*views = append(*views, *current)
+		}
+		if 0 < len((*current).Sub) {
+			for _, sub := range (*current).Sub {
+				genCodeIosAggregateWidgets(&sub, views)
+			}
+		}
+	}
 }
 
 func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *CodeBuffer, layoutCodeBuf *CodeBuffer) {
