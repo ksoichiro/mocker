@@ -458,8 +458,34 @@ func genCodeIosAggregateWidgets(current *View, views *[]View) {
 }
 
 func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *CodeBuffer, layoutCodeBuf *CodeBuffer) {
-	buf.add(`#import "%s%sViewController.h"
-#import "UIView+Extension.h"
+	buf.add(`#import "%s%sViewController.h"`,
+		mock.Meta.Ios.ClassPrefix,
+		strings.Title(screen.Id),
+	)
+
+	for _, b := range screen.Behaviors {
+		if b.Trigger.Type != "click" {
+			// Not support other than click currently
+			continue
+		}
+
+		if b.Action.Type == "transit_forward" {
+			var id string
+			for _, next := range mock.Screens {
+				if next.Id == b.Action.Transit {
+					id = next.Id
+				}
+			}
+			if id != "" {
+				buf.add(`#import "%s%sViewController.h"`,
+					mock.Meta.Ios.ClassPrefix,
+					strings.Title(id),
+				)
+			}
+		}
+	}
+
+	buf.add(`#import "UIView+Extension.h"
 
 @interface %s%sViewController ()
 
@@ -475,8 +501,6 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
         [self.view addSubview:root];
         NSMutableDictionary *views = [NSMutableDictionary new];
         [root createWithViewInfo:[self viewInfo] views:views];`,
-		mock.Meta.Ios.ClassPrefix,
-		strings.Title(screen.Id),
 		mock.Meta.Ios.ClassPrefix,
 		strings.Title(screen.Id),
 		mock.Meta.Ios.ClassPrefix,
@@ -520,9 +544,33 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
 		if view.Type == "button" {
 			buf.add(`
 - (void)didPush%s
-{
-    // TODO Write your event handling here
-}`, strings.Title(view.Id))
+{`, strings.Title(view.Id))
+			for _, b := range screen.Behaviors {
+				if b.Trigger.Widget != view.Id {
+					continue
+				}
+				if b.Trigger.Type != "click" {
+					// Not support other than click currently
+					continue
+				}
+
+				if b.Action.Type == "transit_forward" {
+					var id string
+					for _, next := range mock.Screens {
+						if next.Id == b.Action.Transit {
+							id = next.Id
+						}
+					}
+					buf.add(`    %s%sViewController *vc = [%s%sViewController new];
+    [self.navigationController pushViewController:vc animated:YES];`,
+						mock.Meta.Ios.ClassPrefix,
+						strings.Title(id),
+						mock.Meta.Ios.ClassPrefix,
+						strings.Title(id),
+					)
+				}
+			}
+			buf.add(`}`)
 		}
 	}
 
