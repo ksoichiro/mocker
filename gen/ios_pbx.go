@@ -109,37 +109,35 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		Path:              pj + "-Info.plist",
 		SourceTree:        "<group>",
 	}
-	pbxFileReferences["Base|InfoPlist.strings"] = pbxObject{
-		Name:              "Base",
-		Id:                genIosFileId(&fileId),
-		LastKnownFileType: "text.plist.strings",
-		ShowNameInFileRef: true,
-		Path:              "Base.lproj/InfoPlist.strings",
-		SourceTree:        "<group>",
+	for _, s := range mock.Strings {
+		lang := s.Lang
+		if strings.ToLower(lang) == "base" {
+			// base -> Base
+			lang = strings.Title(lang)
+		}
+		pbxFileReferences[lang+"|InfoPlist.strings"] = pbxObject{
+			Name:              lang,
+			Id:                genIosFileId(&fileId),
+			LastKnownFileType: "text.plist.strings",
+			ShowNameInFileRef: true,
+			Path:              lang + ".lproj/InfoPlist.strings",
+			SourceTree:        "<group>",
+		}
 	}
-	pbxFileReferences["ja|InfoPlist.strings"] = pbxObject{
-		Name:              "ja",
-		Id:                genIosFileId(&fileId),
-		LastKnownFileType: "text.plist.strings",
-		ShowNameInFileRef: true,
-		Path:              "ja.lproj/InfoPlist.strings",
-		SourceTree:        "<group>",
-	}
-	pbxFileReferences["Base|Localizable.strings"] = pbxObject{
-		Name:              "Base",
-		Id:                genIosFileId(&fileId),
-		LastKnownFileType: "text.plist.strings",
-		ShowNameInFileRef: true,
-		Path:              "Base.lproj/Localizable.strings",
-		SourceTree:        "<group>",
-	}
-	pbxFileReferences["ja|Localizable.strings"] = pbxObject{
-		Name:              "ja",
-		Id:                genIosFileId(&fileId),
-		LastKnownFileType: "text.plist.strings",
-		ShowNameInFileRef: true,
-		Path:              "ja.lproj/Localizable.strings",
-		SourceTree:        "<group>",
+	for _, s := range mock.Strings {
+		lang := s.Lang
+		if strings.ToLower(lang) == "base" {
+			// base -> Base
+			lang = strings.Title(lang)
+		}
+		pbxFileReferences[lang+"|Localizable.strings"] = pbxObject{
+			Name:              lang,
+			Id:                genIosFileId(&fileId),
+			LastKnownFileType: "text.plist.strings",
+			ShowNameInFileRef: true,
+			Path:              lang + ".lproj/Localizable.strings",
+			SourceTree:        "<group>",
+		}
 	}
 	pbxFileReferences["main.m"] = pbxObject{
 		Name:              "main.m",
@@ -211,21 +209,26 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 		SourceTree:        "<group>",
 	}
 	// PBXVariantGroup
+	fileRefsInfoPlist := []pbxObject{}
+	fileRefsLocalizableStrings := []pbxObject{}
+	for _, s := range mock.Strings {
+		lang := s.Lang
+		if strings.ToLower(lang) == "base" {
+			// base -> Base
+			lang = strings.Title(lang)
+		}
+		fileRefsInfoPlist = append(fileRefsInfoPlist, pbxFileReferences[lang+"|InfoPlist.strings"])
+		fileRefsLocalizableStrings = append(fileRefsLocalizableStrings, pbxFileReferences[lang+"|Localizable.strings"])
+	}
 	pbxVariantGroups["InfoPlist.strings"] = pbxObject{
-		Name: "InfoPlist.strings",
-		Id:   genIosFileId(&fileId),
-		Children: []pbxObject{
-			pbxFileReferences["Base|InfoPlist.strings"],
-			pbxFileReferences["ja|InfoPlist.strings"],
-		},
+		Name:     "InfoPlist.strings",
+		Id:       genIosFileId(&fileId),
+		Children: fileRefsInfoPlist,
 	}
 	pbxVariantGroups["Localizable.strings"] = pbxObject{
-		Name: "Localizable.strings",
-		Id:   genIosFileId(&fileId),
-		Children: []pbxObject{
-			pbxFileReferences["Base|Localizable.strings"],
-			pbxFileReferences["ja|Localizable.strings"],
-		},
+		Name:     "Localizable.strings",
+		Id:       genIosFileId(&fileId),
+		Children: fileRefsLocalizableStrings,
 	}
 	// PBXBuildFile
 	pbxBuildFiles["Foundation.framework"] = pbxObject{
@@ -664,20 +667,32 @@ func genCodeIosProjectPbxproj(mock *Mock, buf *CodeBuffer) {
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
-			knownRegions = (
-				en,
-				Base,
-				ja,
-			);
+			knownRegions = (`,
+			cp,
+			mock.Meta.Ios.OrganizationName,
+			xcConfigurationLists[project.BuildConfigurationList].Id,
+			xcConfigurationLists[project.BuildConfigurationList].Name,
+		)
+		hasEn := false
+		for _, s := range mock.Strings {
+			lang := s.Lang
+			if strings.ToLower(lang) == "base" {
+				// base -> Base
+				lang = strings.Title(lang)
+			} else if lang == "en" {
+				hasEn = true
+			}
+			buf.add(`				%s,`, lang)
+		}
+		if !hasEn {
+			buf.add(`				en,`)
+		}
+		buf.add(`			);
 			mainGroup = %s;
 			productRefGroup = %s /* %s */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (`,
-			cp,
-			mock.Meta.Ios.OrganizationName,
-			xcConfigurationLists[project.BuildConfigurationList].Id,
-			xcConfigurationLists[project.BuildConfigurationList].Name,
 			pbxGroups[project.MainGroup].Id,
 			pbxGroups[project.ProductRefGroup].Id,
 			pbxGroups[project.ProductRefGroup].Name,

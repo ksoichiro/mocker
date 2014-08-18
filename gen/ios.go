@@ -530,7 +530,6 @@ func genIosLayoutRecur(view *View, top bool, buf *CodeBuffer, indent int, trail 
 		buf.add(tt+`@"Below": @"%s",`, view.Below)
 	}
 	if widget.Textable && view.Label != "" {
-		// FIXME view.Label must converted to NSLocalizedString
 		buf.add(tt+`@"Text": @"%s",`, view.Label)
 	}
 	if widget.Orientation != "" {
@@ -620,7 +619,7 @@ func genCodeIosViewHelperImplementation(mock *Mock, buf *CodeBuffer) {
     if ([widget isEqualToString:@"button"]) {
         // UIButton
         UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(margin + padding, maxY + margin + padding, self.frame.size.width - (margin + padding) * 2, 100/*FIXME This is temporary */)];
-        [button setTitle:[viewInfo objectForKey:@"Text"] forState:UIControlStateNormal];
+        [button setTitle:NSLocalizedString([viewInfo objectForKey:@"Text"], nil) forState:UIControlStateNormal];
         [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         // TODO adjust button size with button text
         [self addSubview:button];
@@ -629,7 +628,7 @@ func genCodeIosViewHelperImplementation(mock *Mock, buf *CodeBuffer) {
     if ([widget isEqualToString:@"label"]) {
         // UILabel
         UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(margin + padding, maxY + margin + padding, self.frame.size.width - (margin + padding) * 2, 100/*FIXME This is temporary */)];
-        label.text = [viewInfo objectForKey:@"Text"];
+        label.text = NSLocalizedString([viewInfo objectForKey:@"Text"], nil);
         // TODO adjust label size with label text
         [self addSubview:label];
         return;
@@ -683,13 +682,22 @@ func genCodeIosViewHelperImplementation(mock *Mock, buf *CodeBuffer) {
 }
 
 func genIosLocalizableStrings(mock *Mock, dir string) {
-	var buf CodeBuffer
-	genCodeIosLocalizableStrings(mock, &buf)
-	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, "Base.lproj", "Localizable.strings"))
-	genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, "ja.lproj", "Localizable.strings"))
+	for _, s := range mock.Strings {
+		lang := s.Lang
+		if strings.ToLower(lang) == "base" {
+			// base -> Base
+			lang = strings.Title(lang)
+		}
+		var buf CodeBuffer
+		genCodeIosLocalizableStrings(s, &buf)
+		genFile(&buf, filepath.Join(dir, mock.Meta.Ios.Project, lang+".lproj", "Localizable.strings"))
+	}
 }
 
-func genCodeIosLocalizableStrings(mock *Mock, buf *CodeBuffer) {
+func genCodeIosLocalizableStrings(s String, buf *CodeBuffer) {
+	for _, def := range s.Defs {
+		buf.add(`"%s" = "%s";`, def.Id, def.Value)
+	}
 }
 
 func genIosColors(mock *Mock, dir string) {
