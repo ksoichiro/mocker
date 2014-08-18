@@ -482,8 +482,8 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
 		mock.Meta.Ios.ClassPrefix,
 		strings.Title(screen.Id))
 
+	views := []View{}
 	if 0 < len(screen.Layout) {
-		views := []View{}
 		genCodeIosAggregateWidgets(&screen.Layout[0], &views)
 		for _, view := range views {
 			switch view.Type {
@@ -514,8 +514,19 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-}
+}`)
 
+	for _, view := range views {
+		if view.Type == "button" {
+			buf.add(`
+- (void)didPush%s
+{
+    // TODO Write your event handling here
+}`, strings.Title(view.Id))
+		}
+	}
+
+	buf.add(`
 #pragma mark - Generated layout methods
 
 /**
