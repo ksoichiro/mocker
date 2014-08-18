@@ -1,3 +1,4 @@
+// Mockerfile example
 {
     "name": "Mocker Demo",
     "meta": {
@@ -20,8 +21,11 @@
             "deployment_target": "7.0"
         }
     },
+    // Screen definition
     "screens": [
         {
+            // ID of the screen which will be used
+            // for the name of the Activity or ViewController
             "id": "top",
             "name": "Mocker Demo",
             "layout": [
@@ -52,14 +56,17 @@
                     ]
                 }
             ],
+            // Events for controls inside the layout above.
             "behaviors": [
                 {
                     "trigger": {
                         "type": "click",
+                        // Target widget ID
                         "widget": "next"
                     },
                     "action": {
                         "type": "transit_forward",
+                        // ID of the next screen
                         "transit": "second"
                     }
                 }
@@ -100,13 +107,18 @@
             ]
         }
     ],
+    // The first screen of the app
     "launch": {
         "screen": "top"
     },
+    // Colors to be used in views
     "colors": [
         {"id": "bg_button", "value": "#FF990000"}
     ],
+    // Strings to be used in views
     "strings": [
+        // Define for each languages.
+        // Note that the base language musht be defined as "base",not "en".
         {
             "lang": "base",
             "defs": [

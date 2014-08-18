@@ -9,7 +9,7 @@ import (
 func Unmarshal(data []byte, v interface{}) error {
 	edited := []byte{}
 	for _, s := range strings.Split(string(data), "\n") {
-		if trimmed := strings.TrimLeft(s, " "); !strings.HasPrefix(trimmed, "#") {
+		if trimmed := strings.TrimLeft(s, " "); !strings.HasPrefix(trimmed, "#") && !strings.HasPrefix(trimmed, "//") {
 			edited = append(edited, []byte(trimmed)...)
 		}
 	}
