@@ -55,6 +55,7 @@ type View struct {
 	Type    string
 	Sub     []View
 	Label   string
+	Hint    string
 	Gravity string
 	Below   string
 	SizeW   string `json:"size_w"`

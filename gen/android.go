@@ -32,6 +32,13 @@ func defineAndroidWidgets() {
 		SizeW:    SizeFill,
 		SizeH:    SizeWrap,
 	})
+	awd.Add("input", Widget{
+		Name:     "EditText",
+		Textable: true,
+		Gravity:  GravityCenter,
+		SizeW:    SizeFill,
+		SizeH:    SizeWrap,
+	})
 	awd.Add("linear", Widget{
 		Name:        "LinearLayout",
 		Textable:    false,
@@ -343,6 +350,9 @@ func genAndroidLayoutRecur(view *View, top bool, buf *CodeBuffer, indent int) {
 	}
 	if widget.Textable && view.Label != "" {
 		buf.add(t+`    android:text="@string/%s"`, view.Label)
+	}
+	if view.Hint != "" {
+		buf.add(t+`    android:hint="@string/%s"`, view.Hint)
 	}
 	if widget.Orientation != "" {
 		buf.add(t+`    android:orientation="%s"`, widget.Orientation)

@@ -44,10 +44,18 @@
                             "align_v": "center"
                         },
                         {
+                            "id": "user_id",
+                            "type": "input",
+                            "hint": "hint_user_id",
+                            "size_w": "fill",
+                            "size_h": "wrap",
+                            "below": "label_demo"
+                        },
+                        {
                             "id": "next",
                             "type": "button",
                             "label": "button_next",
-                            "below": "label_demo",
+                            "below": "user_id",
                             "size_w": "fill",
                             "size_h": "wrap",
                             "align_h": "top",
@@ -123,6 +131,7 @@
             "lang": "base",
             "defs": [
                 {"id": "label_demo", "value": "Welcome to Mocker Demo!"},
+                {"id": "hint_user_id", "value": "Input your ID"},
                 {"id": "button_next", "value": "Next"}
             ]
         },
@@ -130,6 +139,7 @@
             "lang": "ja",
             "defs": [
                 {"id": "label_demo", "value": "Mocker Demoへようこそ"},
+                {"id": "hint_user_id", "value": "あなたのIDを入力"},
                 {"id": "button_next", "value": "次へ"}
             ]
         }
