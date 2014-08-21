@@ -30,6 +30,13 @@ func defineIosWidgets() {
 		SizeW:    SizeFill,
 		SizeH:    SizeWrap,
 	})
+	iwd.Add("input", Widget{
+		Name:     "input",
+		Textable: true,
+		Gravity:  GravityCenter,
+		SizeW:    SizeFill,
+		SizeH:    SizeWrap,
+	})
 	iwd.Add("linear", Widget{
 		Textable:    false,
 		Orientation: OrientationVertical,
@@ -432,6 +439,8 @@ func genCodeIosViewControllerHeader(mock *Mock, screen Screen, buf *CodeBuffer) 
 				widgetName = "UIButton *"
 			case "label":
 				widgetName = "UILabel *"
+			case "input":
+				widgetName = "UITextField *"
 			}
 			buf.add(`@property %s%s;`,
 				widgetName,
@@ -521,6 +530,11 @@ func genCodeIosViewControllerImplementation(mock *Mock, screen Screen, buf *Code
 				buf.add(`
         if ([views.allKeys containsObject:@"%s"]) {
             self.%s = (UILabel *) [views objectForKey:@"%s"];
+        }`, view.Id, view.Id, view.Id)
+			case "input":
+				buf.add(`
+        if ([views.allKeys containsObject:@"%s"]) {
+            self.%s = (UITextField *) [views objectForKey:@"%s"];
         }`, view.Id, view.Id, view.Id)
 			default:
 				buf.add(`
@@ -655,6 +669,9 @@ func genIosLayoutRecur(view *View, top bool, buf *CodeBuffer, indent int, trail 
 	if widget.Textable && view.Label != "" {
 		buf.add(tt+`@"Text": @"%s",`, view.Label)
 	}
+	if view.Hint != "" {
+		buf.add(tt+`@"Hint": @"%s",`, view.Hint)
+	}
 	if widget.Orientation != "" {
 		buf.add(tt+`@"Orientation": @"%s",`, widget.Orientation)
 	}
@@ -759,6 +776,20 @@ func genCodeIosViewHelperImplementation(mock *Mock, buf *CodeBuffer) {
         [self addSubview:label];
         if ([viewInfo.allKeys containsObject:@"Id"]) {
             [views setObject:label forKey:[viewInfo objectForKey:@"Id"]];
+        }
+        return;
+    }
+    if ([widget isEqualToString:@"input"]) {
+        // UITextField
+        UITextField *label = [[UITextField alloc] initWithFrame:CGRectMake(margin + padding, maxY + margin + padding, self.frame.size.width - (margin + padding) * 2, 100/*FIXME This is temporary */)];
+        label.text = NSLocalizedString([viewInfo objectForKey:@"Text"], nil);
+        // TODO adjust label size with label text
+        [self addSubview:label];
+        if ([viewInfo.allKeys containsObject:@"Id"]) {
+            [views setObject:label forKey:[viewInfo objectForKey:@"Id"]];
+        }
+        if ([viewInfo.allKeys containsObject:@"Hint"]) {
+            [label setPlaceholder:NSLocalizedString([viewInfo objectForKey:@"Hint"], nil)];
         }
         return;
     }
